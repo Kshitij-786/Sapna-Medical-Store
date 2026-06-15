@@ -1991,7 +1991,7 @@
       if (!valid) return;
       setAuthLoading("login", true);
       try {
-        const res  = await fetch("http://localhost:3001/api/login", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ email, password }) });
+        const res  = await fetch("https://sapna-medical-store.onrender.com/api/login", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ email, password }) });
         const data = await res.json();
         if (res.ok && data.success) {
           // set logged in user (use email local part as name)
@@ -2029,7 +2029,7 @@
       if (!valid) return;
       setAuthLoading("register", true);
       try {
-        const res  = await fetch("http://localhost:3001/api/register", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name, email, phone, password: pass }) });
+        const res  = await fetch("", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name, email, phone, password: pass }) });
         const data = await res.json();
         if (res.ok && data.success) { showAuthMsg("success", "Account created! Please sign in."); setTimeout(() => switchTab("login"), 1800); }
         else { showAuthMsg("error", data.message || "Registration failed."); }
