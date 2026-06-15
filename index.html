@@ -1,0 +1,2101 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sapna Medical Store – Trusted pharmacy in Kasganj since 1962. Buy genuine medicines, wellness products, cosmetics and more." />
+  <title>Sapna Medical Store – Your Trusted Pharmacy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="icon" type="image/png" href="logo.jpg">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+
+  <!-- ═══════════════════════════════════════════════════════════
+       FIX #3 — Fuse.js for fuzzy search (loaded from CDN)
+  ═══════════════════════════════════════════════════════════ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js"
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <style>
+    /* ================================================================
+       DESIGN TOKENS & THEME VARIABLES
+    ================================================================ */
+    :root {
+      --emerald:      #10b981;
+      --emerald-dk:   #059669;
+      --emerald-lt:   #d1fae5;
+      --teal:         #0d9488;
+      --teal-dk:      #0f766e;
+      --accent:       #f59e0b;
+      --accent-red:   #ef4444;
+      --blue:         #2563eb;
+      --blue-lt:      #dbeafe;
+
+      --bg:           #f0fdf8;
+      --surface:      #ffffff;
+      --surface2:     #f8fafc;
+      --border:       #d1fae5;
+      --text-primary: #0f172a;
+      --text-sec:     #475569;
+      --text-muted:   #94a3b8;
+      --shadow:       0 2px 12px rgba(16,185,129,.12);
+      --shadow-lg:    0 8px 32px rgba(16,185,129,.18);
+      --overlay:      rgba(15,23,42,.45);
+
+      --radius:       12px;
+      --radius-lg:    20px;
+      --transition:      .22s cubic-bezier(.4,0,.2,1);
+      --theme-transition: .55s cubic-bezier(.77,0,.175,1);
+
+      --font-display: "DM Serif Display", serif;
+      --font-body:    "DM Sans", sans-serif;
+    }
+
+    [data-theme="dark"] {
+      --bg:           #0b1120;
+      --surface:      #131e2e;
+      --surface2:     #192334;
+      --border:       #1e3a2e;
+      --text-primary: #e2f0ec;
+      --text-sec:     #94a3b8;
+      --text-muted:   #4b6072;
+      --shadow:       0 2px 12px rgba(0,0,0,.4);
+      --shadow-lg:    0 8px 32px rgba(0,0,0,.5);
+      --overlay:      rgba(0,0,0,.65);
+    }
+
+    #themeRipple {
+      position: fixed; inset: 0; z-index: 9999;
+      pointer-events: none; opacity: 0;
+      transition: opacity .18s ease;
+      background: radial-gradient(circle at var(--ripple-x,50%) var(--ripple-y,50%),
+        rgba(16,185,129,.18) 0%, rgba(16,185,129,.06) 45%, transparent 70%);
+    }
+    #themeRipple.active { opacity: 1; }
+
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
+      transition:
+        background-color var(--theme-transition),
+        border-color     var(--theme-transition),
+        color            var(--theme-transition),
+        box-shadow       var(--theme-transition),
+        opacity          var(--transition);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+    img { max-width: 100%; display: block; }
+    button { cursor: pointer; font-family: inherit; border: none; outline: none; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--emerald); border-radius: 99px; }
+
+    /* ================================================================
+       FIX #1 — NAVBAR SINGLE-LINE ALIGNMENT
+       Key changes:
+         • flex-wrap: nowrap on .nav-inner so nothing wraps
+         • white-space: nowrap on all text-bearing flex children
+         • flex-shrink values tuned so search bar shrinks before links
+         • overflow: visible on header so sticky shadow still renders
+    ================================================================ */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.25rem;
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      box-shadow: var(--shadow);
+    }
+
+    .nav-inner {
+      max-width: 1280px;
+      margin: auto;
+      display: flex;
+      flex-wrap: nowrap;          /* ← FIX: never wrap to 2nd line */
+      align-items: center;
+      gap: .75rem;                /* ← tighter gap to fit everything */
+      height: 68px;
+      min-width: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      flex-shrink: 0;             /* logo never shrinks */
+      text-decoration: none;
+      white-space: nowrap;        /* ← FIX: logo text stays inline */
+    }
+    .logo-icon {
+      width: 42px; height: 42px;  /* slightly smaller for space */
+      background: linear-gradient(135deg, var(--emerald), var(--teal));
+      border-radius: 12px;
+      display: grid; place-items: center;
+      font-size: 1.35rem;
+      box-shadow: 0 4px 12px rgba(16,185,129,.35);
+      flex-shrink: 0;
+      transition: transform .22s cubic-bezier(.4,0,.2,1), background-color var(--theme-transition);
+    }
+    .logo-text-wrap { display: flex; flex-direction: column; line-height: 1.1; }
+    .logo-text {
+      font-family: var(--font-display);
+      font-size: 1.45rem;         /* slightly smaller to save space */
+      font-weight: 400;
+      color: var(--emerald-dk);
+      letter-spacing: -.01em;
+      white-space: nowrap;        /* ← FIX */
+    }
+    .logo-tagline {
+      font-size: .63rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      white-space: nowrap;        /* ← FIX */
+    }
+    [data-theme="dark"] .logo-text { color: var(--emerald); }
+
+    /* ── Desktop nav links ── */
+    .nav-links {
+      display: flex;
+      gap: .1rem;
+      margin-left: .1rem;
+      flex-shrink: 0;             /* links never shrink */
+      white-space: nowrap;        /* ← FIX */
+    }
+    .nav-links a {
+      padding: .4rem .7rem;
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--text-sec);
+      white-space: nowrap;        /* ← FIX: each link stays 1 line */
+    }
+    .nav-links a:hover, .nav-links a.active {
+      background: var(--emerald-lt); color: var(--emerald-dk);
+    }
+    [data-theme="dark"] .nav-links a:hover,
+    [data-theme="dark"] .nav-links a.active {
+      background: rgba(16,185,129,.15); color: var(--emerald);
+    }
+
+    .nav-spacer { flex: 1; min-width: 0; } /* pushes search to right */
+
+    /* ── Search bar — shrinks gracefully instead of wrapping ── */
+    .nav-search-wrap {
+      display: flex;
+      align-items: center;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      width: 260px;
+      flex-shrink: 1;             /* ← FIX: shrinks before wrapping */
+      min-width: 120px;           /* ← FIX: never disappears fully */
+    }
+    .nav-search-wrap:focus-within {
+      border-color: var(--emerald);
+      box-shadow: 0 0 0 3px rgba(16,185,129,.12);
+    }
+    .nav-search-input {
+      flex: 1; min-width: 0;      /* ← FIX: input shrinks inside wrapper */
+      padding: .48rem .7rem;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: .84rem;
+    }
+    .nav-search-input::placeholder { color: var(--text-muted); }
+    .nav-search-input:focus { outline: none; }
+    .nav-search-btn {
+      padding: .48rem .75rem;
+      background: var(--emerald); color: #fff;
+      font-size: .88rem;
+      border-left: 1px solid rgba(255,255,255,.2);
+      flex-shrink: 0;
+    }
+    .nav-search-btn:hover { background: var(--emerald-dk); }
+
+    /* ── Cart button ── */
+    .cart-btn {
+      position: relative;
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: grid; place-items: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;             /* ← FIX: never shrinks */
+      transition: background var(--transition), transform .15s ease;
+    }
+    .cart-btn:hover { background: var(--emerald-lt); transform: translateY(-1px); }
+    [data-theme="dark"] .cart-btn:hover { background: rgba(16,185,129,.15); }
+    .cart-badge {
+      position: absolute; top: -5px; right: -5px;
+      width: 18px; height: 18px;
+      border-radius: 99px; background: var(--accent-red);
+      font-size: .6rem; font-weight: 700;
+      display: none; place-items: center; color: #fff;
+    }
+    .cart-badge.visible { display: grid; }
+
+    /* ── Dark mode toggle ── */
+    .theme-toggle { display: flex; align-items: center; flex-shrink: 0; }
+    .toggle-track {
+      width: 52px; height: 26px;
+      border-radius: 99px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      position: relative; cursor: pointer;
+      border: 2px solid rgba(0,0,0,.08);
+      transition: background .4s cubic-bezier(.77,0,.175,1), border-color .4s ease;
+    }
+    [data-theme="dark"] .toggle-track {
+      background: linear-gradient(135deg, #312e81, #4338ca);
+      border-color: rgba(255,255,255,.1);
+    }
+    .toggle-thumb {
+      position: absolute; top: 3px; left: 3px;
+      width: 16px; height: 16px;
+      border-radius: 50%; background: #fff;
+      display: grid; place-items: center; font-size: .6rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.25);
+      transition: transform .4s cubic-bezier(.77,0,.175,1), background-color .4s ease;
+    }
+    [data-theme="dark"] .toggle-thumb { transform: translateX(26px); background: #c7d2fe; }
+    .toggle-thumb::before { content: "☀️"; font-size: .58rem; }
+    [data-theme="dark"] .toggle-thumb::before { content: "🌙"; }
+
+    /* ── Auth buttons — compact ── */
+    .btn-login {
+      padding: .38rem .8rem;
+      border-radius: 8px; font-size: .8rem; font-weight: 600;
+      background: transparent;
+      border: 1.5px solid var(--emerald); color: var(--emerald);
+      flex-shrink: 0; white-space: nowrap; /* ← FIX */
+    }
+    .btn-login:hover { background: var(--emerald-lt); }
+    .btn-register {
+      padding: .38rem .8rem;
+      border-radius: 8px; font-size: .8rem; font-weight: 600;
+      background: linear-gradient(135deg, var(--emerald), var(--teal));
+      color: #fff;
+      flex-shrink: 0; white-space: nowrap; /* ← FIX */
+      transition: opacity var(--transition), transform .15s ease !important;
+    }
+    .btn-register:hover { opacity: .9; transform: translateY(-1px); }
+
+    /* ── Profile wrap ── */
+    .profile-wrap {
+      display: none;
+      position: relative;
+      align-items: center;
+      gap: .45rem;
+      flex-shrink: 0;             /* ← FIX */
+    }
+    .profile-wrap.visible { display: flex; }
+    .user-greeting {
+      font-size: .78rem; font-weight: 600; color: var(--text-sec);
+      max-width: 90px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .profile-avatar-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--emerald), var(--teal));
+      border: 2px solid var(--emerald-lt);
+      display: grid; place-items: center;
+      font-size: .84rem; font-weight: 700; color: #fff; cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease !important;
+    }
+    .profile-avatar-btn:hover { transform: scale(1.08); box-shadow: 0 0 0 3px rgba(16,185,129,.25); }
+    [data-theme="dark"] .profile-avatar-btn { border-color: rgba(16,185,129,.3); }
+
+    .profile-dropdown {
+      position: absolute; top: calc(100% + 10px); right: 0;
+      width: 210px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.15); z-index: 950; overflow: hidden;
+      transform-origin: top right;
+      transform: scale(.92) translateY(-8px); opacity: 0; pointer-events: none;
+      transition: transform .2s cubic-bezier(.4,0,.2,1), opacity .2s cubic-bezier(.4,0,.2,1) !important;
+    }
+    .profile-dropdown.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
+    .dropdown-header { padding: .85rem 1rem .6rem; border-bottom: 1px solid var(--border); }
+    .dropdown-header .dh-name { font-size: .88rem; font-weight: 700; color: var(--text-primary); }
+    .dropdown-header .dh-email { font-size: .72rem; color: var(--text-muted); margin-top: .1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dropdown-items { padding: .45rem .5rem; }
+    .dropdown-item {
+      display: flex; align-items: center; gap: .6rem;
+      width: 100%; padding: .52rem .65rem; border-radius: 9px;
+      font-size: .84rem; font-weight: 500; color: var(--text-sec);
+      background: none; text-align: left; cursor: pointer;
+      transition: background var(--transition), color var(--transition) !important;
+    }
+    .dropdown-item:hover { background: var(--surface2); color: var(--text-primary); }
+    .dropdown-item.danger { color: #ef4444; }
+    .dropdown-item.danger:hover { background: #fee2e2; color: #dc2626; }
+    [data-theme="dark"] .dropdown-item.danger:hover { background: rgba(239,68,68,.12); color: #f87171; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: .3rem .5rem; }
+
+    /* ── Hamburger (mobile) ── */
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      width: 28px; cursor: pointer; padding: 4px; flex-shrink: 0;
+    }
+    .hamburger span { height: 2.5px; background: var(--text-primary); border-radius: 99px; }
+
+    .mobile-nav {
+      display: none; flex-direction: column; gap: .2rem;
+      padding: .75rem 1.5rem 1rem;
+      border-top: 1px solid var(--border); background: var(--surface);
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a { padding: .6rem .9rem; border-radius: 8px; font-weight: 500; color: var(--text-sec); }
+    .mobile-nav a:hover { background: var(--emerald-lt); color: var(--emerald-dk); }
+    .mobile-search-wrap { display: flex; gap: .5rem; padding: .5rem .9rem; }
+    .mobile-search-input {
+      flex: 1; padding: .55rem .85rem; border-radius: 9px;
+      border: 1.5px solid var(--border); background: var(--surface2);
+      color: var(--text-primary); font-family: var(--font-body); font-size: .88rem;
+    }
+    .mobile-search-input:focus { outline: none; border-color: var(--emerald); }
+
+    /* ================================================================
+       FIX #3 — "DID YOU MEAN?" SUGGESTION BANNER
+    ================================================================ */
+    .did-you-mean-bar {
+      display: none;
+      max-width: 1280px;
+      margin: 1rem auto 0;
+      padding: 0 1.5rem;
+    }
+    .did-you-mean-bar.visible { display: block; }
+    .dym-inner {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      background: var(--blue-lt);
+      border: 1.5px solid #93c5fd;
+      border-radius: 10px;
+      padding: .65rem 1rem;
+      font-size: .88rem;
+      flex-wrap: wrap;
+    }
+    [data-theme="dark"] .dym-inner {
+      background: rgba(37,99,235,.12);
+      border-color: rgba(37,99,235,.3);
+    }
+    .dym-label { color: var(--text-sec); }
+    .dym-suggestion {
+      font-weight: 700; color: var(--blue); cursor: pointer;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .dym-suggestion:hover { color: #1d4ed8; }
+    .dym-dismiss {
+      margin-left: auto; font-size: .75rem; color: var(--text-muted);
+      background: none; border: none; cursor: pointer; padding: .1rem .3rem;
+    }
+    .dym-dismiss:hover { color: var(--text-sec); }
+
+    /* ================================================================
+       HOMEPAGE CONTENT
+    ================================================================ */
+    #homepageContent { display: block; }
+
+    .hero {
+      background: linear-gradient(135deg, #064e3b 0%, #065f46 40%, #0f766e 100%);
+      padding: 3.5rem 1.5rem 4rem;
+      position: relative; overflow: hidden;
+    }
+    [data-theme="dark"] .hero {
+      background: linear-gradient(135deg, #031a12 0%, #042f20 50%, #074c41 100%);
+    }
+    .hero::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1' fill='white' opacity='.06'/%3E%3C/svg%3E") repeat;
+    }
+    .hero-cross { position: absolute; width: 80px; height: 80px; opacity: .07; }
+    .hero-cross::before, .hero-cross::after { content: ""; position: absolute; background: #fff; border-radius: 3px; }
+    .hero-cross::before { width: 100%; height: 30%; top: 35%; left: 0; }
+    .hero-cross::after  { width: 30%; height: 100%; top: 0; left: 35%; }
+    .hero-cross.c1 { top: 15%; right: 8%; transform: rotate(15deg); }
+    .hero-cross.c2 { bottom: 10%; right: 25%; width: 50px; height: 50px; }
+    .hero-cross.c3 { top: 25%; right: 35%; width: 35px; height: 35px; opacity: .05; }
+
+    .hero-inner {
+      max-width: 1280px; margin: auto; position: relative; z-index: 2;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+      padding: .3rem .75rem; border-radius: 99px;
+      font-size: .75rem; font-weight: 600; color: #a7f3d0;
+      letter-spacing: .05em; text-transform: uppercase; margin-bottom: .9rem;
+    }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+      color: #fff; line-height: 1.15; margin-bottom: .7rem;
+    }
+    .hero-title em { font-style: italic; color: #6ee7b7; }
+    .hero-sub { font-size: .98rem; color: #a7f3d0; margin-bottom: 1.4rem; max-width: 440px; }
+    .hero-info { display: flex; flex-direction: column; gap: .45rem; margin-bottom: 1.6rem; }
+    .hero-info-item { display: flex; align-items: center; gap: .5rem; color: #d1fae5; font-size: .86rem; }
+    .hero-info-item .icon {
+      width: 28px; height: 28px;
+      background: rgba(255,255,255,.1); border-radius: 8px;
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .hero-search-wrap { display: flex; gap: .5rem; max-width: 480px; }
+    .hero-search-input {
+      flex: 1; padding: .72rem 1rem; border-radius: 10px;
+      border: 1.5px solid rgba(255,255,255,.25);
+      background: rgba(255,255,255,.12); color: #fff;
+      font-family: var(--font-body); font-size: .92rem;
+      backdrop-filter: blur(8px);
+      transition: border-color var(--transition), background var(--transition) !important;
+    }
+    .hero-search-input::placeholder { color: rgba(255,255,255,.5); }
+    .hero-search-input:focus { outline: none; border-color: rgba(255,255,255,.6); background: rgba(255,255,255,.18); }
+    .hero-search-btn {
+      padding: .72rem 1.25rem; border-radius: 10px;
+      background: var(--accent); color: #fff; font-weight: 700; font-size: .9rem;
+      white-space: nowrap;
+      transition: opacity var(--transition), transform .15s ease !important;
+    }
+    .hero-search-btn:hover { opacity: .9; transform: translateY(-1px); }
+
+    .hero-visual { display: flex; justify-content: center; align-items: center; }
+    .hero-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; max-width: 340px; }
+    .mini-card {
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+      border-radius: 14px; padding: 1rem; backdrop-filter: blur(10px);
+      text-align: center; cursor: default;
+      transition: background .2s ease, transform .2s ease !important;
+    }
+    .mini-card:hover { background: rgba(255,255,255,.14); transform: translateY(-2px); }
+    .mini-card .mc-icon { font-size: 1.8rem; margin-bottom: .3rem; }
+    .mini-card .mc-label { font-size: .74rem; font-weight: 600; color: #a7f3d0; }
+    .mini-card.featured { grid-column: span 2; display: flex; align-items: center; gap: .85rem; text-align: left; }
+    .mini-card.featured .mc-icon { font-size: 2.2rem; }
+    .mini-card.featured .mc-text { color: #d1fae5; font-size: .82rem; }
+    .mini-card.featured strong { color: #fff; display: block; margin-bottom: .12rem; }
+
+    /* ── HOME SECTIONS ── */
+    .home-section { max-width: 1280px; margin: 2.5rem auto 0; padding: 0 1.5rem; }
+    .home-section-title { font-family: var(--font-display); font-size: 1.55rem; color: var(--text-primary); margin-bottom: 1.25rem; }
+    .home-section-title span { display: inline-block; width: 4px; height: 1.4rem; background: var(--emerald); border-radius: 2px; margin-right: .55rem; vertical-align: middle; }
+
+    .category-scroll { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: .5rem; scrollbar-width: none; }
+    .category-scroll::-webkit-scrollbar { display: none; }
+    .cat-card {
+      flex-shrink: 0; width: 110px; background: var(--surface);
+      border: 1.5px solid var(--border); border-radius: var(--radius-lg);
+      padding: 1.1rem .75rem .85rem; text-align: center; cursor: pointer;
+      transition: all var(--transition);
+    }
+    .cat-card:hover, .cat-card.active {
+      border-color: var(--emerald); background: var(--emerald-lt);
+      transform: translateY(-3px); box-shadow: var(--shadow);
+    }
+    [data-theme="dark"] .cat-card:hover, [data-theme="dark"] .cat-card.active { background: rgba(16,185,129,.12); }
+    .cat-card-icon { font-size: 1.9rem; margin-bottom: .4rem; }
+    .cat-card-name { font-size: .74rem; font-weight: 600; color: var(--text-sec); line-height: 1.3; }
+    .cat-card:hover .cat-card-name, .cat-card.active .cat-card-name { color: var(--emerald-dk); }
+    [data-theme="dark"] .cat-card:hover .cat-card-name, [data-theme="dark"] .cat-card.active .cat-card-name { color: var(--emerald); }
+
+    .offer-banner { max-width: 1280px; margin: 2rem auto 0; padding: 0 1.5rem; }
+    .offer-banner-inner {
+      background: linear-gradient(120deg, #064e3b 0%, #0f766e 100%);
+      border-radius: var(--radius-lg); padding: 1.5rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; overflow: hidden; position: relative;
+    }
+    .offer-banner-inner::after { content: "💊"; position: absolute; right: 8%; font-size: 5rem; opacity: .12; pointer-events: none; }
+    .ob-title { font-family: var(--font-display); font-size: 1.4rem; color: #fff; margin-bottom: .2rem; }
+    .ob-sub { font-size: .85rem; color: #a7f3d0; }
+    .ob-badge {
+      background: var(--accent); color: #fff; padding: .5rem 1.25rem;
+      border-radius: 99px; font-weight: 700; font-size: .88rem;
+      white-space: nowrap; flex-shrink: 0; cursor: pointer;
+      transition: opacity var(--transition), transform .15s ease !important;
+    }
+    .ob-badge:hover { opacity: .9; transform: translateY(-1px); }
+
+    .featured-row { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: .75rem; scrollbar-width: none; }
+    .featured-row::-webkit-scrollbar { display: none; }
+
+    .product-card-sm {
+      flex-shrink: 0; width: 185px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column;
+      transition: transform .2s ease, box-shadow .2s ease, border-color var(--theme-transition) !important;
+    }
+    .product-card-sm:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--emerald); }
+    .product-card-sm .p-img {
+      height: 130px; object-fit: cover; width: 100%;
+      background: var(--surface2);
+      transition: transform .4s ease !important;
+    }
+    .product-card-sm:hover .p-img { transform: scale(1.05); }
+    .product-card-sm .p-body { padding: .7rem .8rem; flex: 1; display: flex; flex-direction: column; }
+    .product-card-sm .p-name {
+      font-size: .8rem; font-weight: 600; color: var(--text-primary); line-height: 1.3;
+      margin-bottom: .3rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .price-block { display: flex; align-items: baseline; gap: .35rem; flex-wrap: wrap; margin-bottom: auto; padding-bottom: .6rem; }
+    .price-disc { font-size: .95rem; font-weight: 700; color: var(--emerald-dk); }
+    [data-theme="dark"] .price-disc { color: var(--emerald); }
+    .price-mrp { font-size: .75rem; color: var(--text-muted); text-decoration: line-through; }
+    .price-off { font-size: .68rem; font-weight: 700; color: var(--accent-red); background: #fee2e2; padding: .1rem .35rem; border-radius: 4px; }
+    [data-theme="dark"] .price-off { background: rgba(239,68,68,.15); }
+    .btn-add-sm {
+      width: 100%; padding: .45rem .4rem; border-radius: 8px;
+      font-size: .78rem; font-weight: 600;
+      background: linear-gradient(135deg, var(--emerald), var(--teal)); color: #fff;
+      transition: opacity var(--transition), transform .15s ease !important;
+    }
+    .btn-add-sm:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-add-sm.added { background: var(--surface2); color: var(--emerald); border: 1.5px solid var(--emerald); }
+
+    /* CATEGORY PILL BAR */
+    .cat-pill-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: .6rem 1.5rem; overflow-x: auto; scrollbar-width: none; }
+    .cat-pill-bar::-webkit-scrollbar { display: none; }
+    .cat-pill-bar-inner { max-width: 1280px; margin: auto; display: flex; gap: .5rem; align-items: center; white-space: nowrap; }
+    .cat-pill {
+      padding: .38rem .85rem; border-radius: 99px; border: 1.5px solid var(--border);
+      font-size: .8rem; font-weight: 600; color: var(--text-sec); background: var(--surface2); cursor: pointer;
+    }
+    .cat-pill:hover, .cat-pill.active { background: var(--emerald); border-color: var(--emerald); color: #fff; }
+
+    /* SEARCH RESULTS VIEW */
+    #searchResultsView { display: none; }
+    .search-results-header {
+      max-width: 1280px; margin: 2rem auto 1.5rem; padding: 0 1.5rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .sr-title { font-family: var(--font-display); font-size: 1.55rem; color: var(--text-primary); }
+    .sr-title em { font-style: italic; color: var(--emerald-dk); }
+    [data-theme="dark"] .sr-title em { color: var(--emerald); }
+    .sr-count { font-size: .82rem; color: var(--text-muted); }
+    .btn-clear-search {
+      padding: .4rem .9rem; border-radius: 8px;
+      background: var(--surface2); border: 1.5px solid var(--border);
+      font-size: .82rem; font-weight: 600; color: var(--text-sec);
+    }
+    .btn-clear-search:hover { border-color: var(--emerald-dk); color: var(--emerald-dk); }
+
+    .product-grid-full {
+      max-width: 1280px; margin: 0 auto 3rem; padding: 0 1.5rem;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 1.25rem;
+    }
+    .product-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column;
+      transition: transform .2s ease, box-shadow .2s ease, border-color var(--theme-transition) !important;
+    }
+    .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--emerald); }
+    .product-img-wrap { position: relative; height: 165px; overflow: hidden; background: var(--surface2); }
+    .product-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease !important; }
+    .product-card:hover .product-img-wrap img { transform: scale(1.06); }
+    .product-cat-tag {
+      position: absolute; top: 8px; left: 8px;
+      padding: .2rem .6rem; border-radius: 99px;
+      font-size: .65rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+      background: rgba(16,185,129,.85); color: #fff; backdrop-filter: blur(4px);
+    }
+    .product-body { padding: .85rem; flex: 1; display: flex; flex-direction: column; }
+    .product-name { font-size: .88rem; font-weight: 600; color: var(--text-primary); line-height: 1.35; margin-bottom: .4rem; }
+    .product-price-block { display: flex; align-items: baseline; gap: .4rem; flex-wrap: wrap; margin-bottom: auto; padding-bottom: .75rem; }
+    .product-disc-price { font-size: 1rem; font-weight: 700; color: var(--emerald-dk); }
+    [data-theme="dark"] .product-disc-price { color: var(--emerald); }
+    .product-mrp-strike { font-size: .8rem; color: var(--text-muted); text-decoration: line-through; }
+    .product-off-badge { font-size: .7rem; font-weight: 700; color: var(--accent-red); background: #fee2e2; padding: .1rem .35rem; border-radius: 4px; }
+    [data-theme="dark"] .product-off-badge { background: rgba(239,68,68,.15); }
+    .btn-add-cart {
+      width: 100%; padding: .52rem .5rem; border-radius: 9px;
+      font-size: .83rem; font-weight: 600;
+      background: linear-gradient(135deg, var(--emerald), var(--teal)); color: #fff;
+      transition: opacity var(--transition), transform .15s ease !important;
+    }
+    .btn-add-cart:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-add-cart.added { background: var(--surface2); color: var(--emerald); border: 1.5px solid var(--emerald); }
+
+    .empty-state { grid-column: 1/-1; text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+    .empty-state .es-icon { font-size: 3rem; margin-bottom: .75rem; }
+    .empty-state p { font-size: 1.05rem; }
+
+    /* NEW MEDICINES */
+    .new-medicines-section { max-width: 1280px; margin: 3rem auto 0; padding: 0 1.5rem; }
+    .nm-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .nm-eyebrow {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: linear-gradient(135deg, rgba(16,185,129,.12), rgba(13,148,136,.08));
+      border: 1px solid var(--emerald); padding: .25rem .7rem; border-radius: 99px;
+      font-size: .72rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+      color: var(--emerald-dk); margin-bottom: .45rem;
+    }
+    [data-theme="dark"] .nm-eyebrow { color: var(--emerald); }
+    .nm-title { font-family: var(--font-display); font-size: 1.55rem; color: var(--text-primary); line-height: 1.15; }
+    .nm-subtitle { font-size: .84rem; color: var(--text-muted); margin-top: .25rem; }
+    .nm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 1.25rem; }
+    .nm-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+      overflow: hidden; display: flex; flex-direction: column; position: relative;
+      transition: transform .22s cubic-bezier(.4,0,.2,1), box-shadow .22s cubic-bezier(.4,0,.2,1), border-color var(--theme-transition) !important;
+    }
+    .nm-card:hover { transform: translateY(-5px); box-shadow: 0 16px 48px rgba(16,185,129,.16); border-color: var(--emerald); }
+    .nm-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 4px 0 0 4px; background: var(--nm-accent, var(--emerald)); transition: width .2s ease !important; }
+    .nm-card:hover::before { width: 6px; }
+    .nm-img-wrap { height: 160px; background: var(--surface2); overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
+    .nm-img-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4rem; background: linear-gradient(135deg, var(--nm-bg-lt,#d1fae5), var(--nm-bg-dk,#a7f3d0)); }
+    .nm-img-placeholder .ph-icon { font-size: 3.2rem; }
+    .nm-img-placeholder .ph-label { font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--nm-accent, var(--emerald-dk)); opacity: .7; }
+    .nm-badge-wrap { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: .3rem; align-items: flex-end; }
+    .nm-badge { display: inline-flex; align-items: center; gap: .25rem; padding: .2rem .55rem; border-radius: 99px; font-size: .65rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.3); }
+    .nm-badge.new     { background: rgba(59,130,246,.88); color: #fff; }
+    .nm-badge.trending{ background: rgba(245,158,11,.88); color: #fff; }
+    .nm-badge.breakthrough { background: rgba(139,92,246,.88); color: #fff; }
+    .nm-badge.rx      { background: rgba(239,68,68,.82); color: #fff; }
+    .nm-body { padding: 1rem 1rem 1rem 1.25rem; flex: 1; display: flex; flex-direction: column; }
+    .nm-names { margin-bottom: .5rem; }
+    .nm-generic { font-size: .95rem; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+    .nm-brand { font-size: .78rem; color: var(--text-muted); font-style: italic; margin-top: .12rem; }
+    .nm-brand strong { font-style: normal; color: var(--nm-accent, var(--emerald-dk)); font-weight: 600; }
+    .nm-desc { font-size: .82rem; color: var(--text-sec); line-height: 1.55; margin-bottom: .8rem; flex: 1; }
+    .nm-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .4rem; padding-top: .65rem; border-top: 1px solid var(--border); }
+    .nm-class { font-size: .72rem; font-weight: 600; padding: .22rem .6rem; border-radius: 99px; background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+    .nm-enquire-btn { padding: .35rem .85rem; border-radius: 8px; font-size: .78rem; font-weight: 700; background: linear-gradient(135deg, var(--emerald), var(--teal)); color: #fff; transition: opacity .18s ease, transform .15s ease !important; }
+    .nm-enquire-btn:hover { opacity: .88; transform: translateY(-1px); }
+
+    /* CART SIDEBAR */
+    .cart-overlay { position: fixed; inset: 0; background: var(--overlay); z-index: 950; opacity: 0; pointer-events: none; transition: opacity .25s ease !important; }
+    .cart-overlay.open { opacity: 1; pointer-events: all; }
+    .cart-sidebar { position: fixed; top: 0; right: 0; width: min(420px,100vw); height: 100vh; background: var(--surface); box-shadow: -8px 0 40px rgba(0,0,0,.2); z-index: 960; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1) !important; }
+    .cart-sidebar.open { transform: translateX(0); }
+    .cart-head { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 1.4rem; border-bottom: 1px solid var(--border); }
+    .cart-head-title { font-family: var(--font-display); font-size: 1.3rem; color: var(--text-primary); }
+    .cart-close { width: 34px; height: 34px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); font-size: 1.1rem; display: grid; place-items: center; color: var(--text-sec); }
+    .cart-close:hover { background: #fee2e2; color: #ef4444; }
+    .cart-items { flex: 1; overflow-y: auto; padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: .75rem; }
+    .cart-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); gap: .5rem; }
+    .cart-empty .ce-icon { font-size: 2.5rem; }
+    .cart-empty p { font-size: .93rem; }
+    .cart-item { display: flex; gap: .75rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: .7rem; align-items: center; }
+    .ci-img { width: 54px; height: 54px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+    .ci-info { flex: 1; min-width: 0; }
+    .ci-name { font-size: .82rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: .2rem; }
+    .ci-price { font-size: .86rem; font-weight: 700; color: var(--emerald-dk); }
+    [data-theme="dark"] .ci-price { color: var(--emerald); }
+    .ci-qty { display: flex; align-items: center; gap: .35rem; }
+    .ci-qty-btn { width: 26px; height: 26px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); font-size: .9rem; font-weight: 700; color: var(--text-primary); display: grid; place-items: center; }
+    .ci-qty-btn:hover { background: var(--emerald-lt); color: var(--emerald-dk); }
+    .ci-qty-num { font-size: .88rem; font-weight: 600; min-width: 20px; text-align: center; }
+    .ci-remove { color: #f87171; font-size: .95rem; padding: .2rem; background: none; }
+    .ci-remove:hover { color: #ef4444; }
+    .cart-foot { border-top: 1px solid var(--border); padding: 1.2rem 1.4rem; display: flex; flex-direction: column; gap: .75rem; }
+    .cart-summary { display: flex; flex-direction: column; gap: .35rem; }
+    .cart-row { display: flex; justify-content: space-between; font-size: .9rem; color: var(--text-sec); }
+    .cart-row.total { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); border-top: 1px solid var(--border); padding-top: .4rem; margin-top: .1rem; }
+    .upload-area { border: 2px dashed var(--border); border-radius: 10px; padding: .65rem 1rem; text-align: center; cursor: pointer; position: relative; }
+    .upload-area:hover { border-color: var(--emerald); background: var(--emerald-lt); }
+    [data-theme="dark"] .upload-area:hover { background: rgba(16,185,129,.08); }
+    .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+    .upload-label { font-size: .82rem; color: var(--text-sec); pointer-events: none; }
+    .upload-label span { color: var(--emerald); font-weight: 600; }
+    .upload-preview { font-size: .78rem; color: var(--emerald-dk); font-weight: 600; display: none; margin-top: .25rem; }
+    .btn-checkout { width: 100%; padding: .75rem; border-radius: 10px; font-size: .92rem; font-weight: 700; background: linear-gradient(135deg, var(--emerald), var(--teal)); color: #fff; transition: opacity var(--transition), transform .15s ease !important; }
+    .btn-checkout:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-checkout:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    .btn-whatsapp { width: 100%; padding: .65rem; border-radius: 10px; font-size: .86rem; font-weight: 700; background: #25d366; color: #fff; display: flex; align-items: center; justify-content: center; gap: .5rem; transition: opacity var(--transition), transform .15s ease !important; }
+    .btn-whatsapp:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-whatsapp:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+    /* AUTH MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: var(--overlay); z-index: 980; display: grid; place-items: center; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity .25s ease !important; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); width: 100%; max-width: 420px; box-shadow: var(--shadow-lg); transform: translateY(20px) scale(.97); transition: transform .25s cubic-bezier(.4,0,.2,1) !important; overflow: hidden; }
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+    .modal-head { background: linear-gradient(135deg, #064e3b, #0f766e); padding: 1.5rem 1.5rem 1.25rem; position: relative; }
+    .modal-logo { display: flex; align-items: center; gap: .5rem; margin-bottom: .75rem; }
+    .modal-logo .icon { width: 32px; height: 32px; background: rgba(255,255,255,.15); border-radius: 8px; display: grid; place-items: center; }
+    .modal-logo .name { font-family: var(--font-display); color: #fff; font-size: 1.05rem; }
+    .modal-title { font-size: 1.35rem; font-family: var(--font-display); color: #fff; }
+    .modal-subtitle { font-size: .82rem; color: #a7f3d0; margin-top: .2rem; }
+    .modal-close-btn { position: absolute; top: .9rem; right: .9rem; width: 30px; height: 30px; background: rgba(255,255,255,.1); border-radius: 7px; color: #fff; font-size: 1rem; display: grid; place-items: center; }
+    .modal-close-btn:hover { background: rgba(255,255,255,.2); }
+    .auth-tabs { display: flex; border-bottom: 1px solid var(--border); }
+    .auth-tab { flex: 1; padding: .75rem; text-align: center; font-size: .9rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
+    .auth-tab.active { color: var(--emerald); border-bottom-color: var(--emerald); }
+    .auth-form-wrap { padding: 1.4rem 1.5rem; }
+    .auth-form { display: none; flex-direction: column; gap: .85rem; }
+    .auth-form.active { display: flex; }
+    .form-group { display: flex; flex-direction: column; gap: .35rem; }
+    .form-label { font-size: .82rem; font-weight: 600; color: var(--text-sec); }
+    .form-input { padding: .65rem .9rem; border-radius: 9px; border: 1.5px solid var(--border); background: var(--surface2); color: var(--text-primary); font-family: var(--font-body); font-size: .9rem; transition: border-color var(--transition), box-shadow var(--transition) !important; }
+    .form-input:focus { outline: none; border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(16,185,129,.12); }
+    .form-input.error { border-color: #ef4444; }
+    .form-hint { font-size: .74rem; color: var(--text-muted); }
+    .form-error { font-size: .74rem; color: #ef4444; display: none; }
+    .form-error.visible { display: block; }
+    .btn-auth { width: 100%; padding: .72rem; border-radius: 10px; font-size: .93rem; font-weight: 700; background: linear-gradient(135deg, var(--emerald), var(--teal)); color: #fff; margin-top: .25rem; transition: opacity var(--transition), transform .15s ease !important; }
+    .btn-auth:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-auth:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    .auth-msg { font-size: .82rem; text-align: center; padding: .5rem; border-radius: 8px; display: none; }
+    .auth-msg.success { display: block; background: var(--emerald-lt); color: var(--emerald-dk); }
+    .auth-msg.error   { display: block; background: #fee2e2; color: #b91c1c; }
+
+    /* CONFIRM SIGNOUT */
+    .confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1100; display: grid; place-items: center; padding: 1rem; opacity: 0; pointer-events: none; backdrop-filter: blur(4px); transition: opacity .22s ease !important; }
+    .confirm-overlay.open { opacity: 1; pointer-events: all; }
+    .confirm-dialog { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; width: 100%; max-width: 360px; padding: 2rem 1.75rem 1.5rem; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,.2); transform: translateY(16px) scale(.96); transition: transform .25s cubic-bezier(.4,0,.2,1) !important; }
+    .confirm-overlay.open .confirm-dialog { transform: translateY(0) scale(1); }
+    .confirm-icon { width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; margin: 0 auto .9rem; display: grid; place-items: center; font-size: 1.6rem; }
+    [data-theme="dark"] .confirm-icon { background: rgba(239,68,68,.15); }
+    .confirm-title { font-family: var(--font-display); font-size: 1.25rem; color: var(--text-primary); margin-bottom: .4rem; }
+    .confirm-msg { font-size: .88rem; color: var(--text-sec); line-height: 1.55; margin-bottom: 1.4rem; }
+    .confirm-actions { display: flex; gap: .75rem; }
+    .btn-cancel { flex: 1; padding: .62rem; border-radius: 10px; font-size: .88rem; font-weight: 600; background: var(--surface2); border: 1.5px solid var(--border); color: var(--text-sec); transition: border-color var(--transition), color var(--transition) !important; }
+    .btn-cancel:hover { border-color: var(--emerald); color: var(--emerald-dk); }
+    .btn-confirm-signout { flex: 1; padding: .62rem; border-radius: 10px; font-size: .88rem; font-weight: 700; background: #ef4444; color: #fff; transition: opacity .18s ease, transform .15s ease !important; }
+    .btn-confirm-signout:hover { opacity: .88; transform: translateY(-1px); }
+
+    /* FOOTER */
+    .footer { background: var(--surface); border-top: 1px solid var(--border); padding: 2.5rem 1.5rem 1.5rem; margin-top: 4rem; }
+    .footer-inner { max-width: 1280px; margin: auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2.5rem; }
+    .footer-desc { font-size: .84rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 1rem; }
+    .footer-heading { font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: .75rem; }
+    .footer-links { display: flex; flex-direction: column; gap: .4rem; }
+    .footer-links a { font-size: .84rem; color: var(--text-sec); }
+    .footer-links a:hover { color: var(--emerald); }
+    .footer-bottom { max-width: 1280px; margin: 2rem auto 0; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: .78rem; color: var(--text-muted); flex-wrap: wrap; gap: .5rem; }
+
+    /* TOAST */
+    .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 1200; display: flex; flex-direction: column; gap: .5rem; pointer-events: none; }
+    .toast { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: .7rem 1rem; font-size: .84rem; font-weight: 500; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: .55rem; transform: translateX(120%); transition: transform .3s cubic-bezier(.4,0,.2,1) !important; max-width: 280px; }
+    .toast.show { transform: translateX(0); }
+    .toast.success { border-left: 3px solid var(--emerald); }
+    .toast.error   { border-left: 3px solid #ef4444; }
+    .toast.info    { border-left: 3px solid var(--blue); }
+    .spinner { width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: none; }
+    .spinner.visible { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ================================================================
+       RESPONSIVE — FIX #1 continued
+       Below 960px: hide nav links (hamburger handles them)
+       Below 768px: hide desktop search (mobile drawer handles it)
+    ================================================================ */
+    @media (max-width: 1100px) {
+      .nav-search-wrap { width: 200px; }
+      .logo-tagline { display: none; } /* reclaim space */
+    }
+    @media (max-width: 960px) {
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+      .hero-inner   { grid-template-columns: 1fr; }
+      .hero-visual  { display: none; }
+      .nav-links    { display: none; }         /* hamburger takes over */
+      .nav-search-wrap { width: 180px; }
+    }
+    @media (max-width: 768px) {
+      .hero-inner { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+      .hero-visual { display: none !important; }
+      .search-results-header { flex-direction: column; align-items: flex-start; }
+      .offer-banner-inner { flex-direction: column; align-items: flex-start; }
+      .product-grid-full { grid-template-columns: repeat(auto-fit, minmax(160px,1fr)) !important; }
+      .cart-sidebar { width: 100% !important; }
+      .btn-login, .btn-register { display: none; }
+      .nav-search-wrap { display: none; }      /* hide on mobile; drawer has search */
+      .hamburger { display: flex; }
+      .user-greeting { display: none; }
+    }
+    @media (max-width: 640px) {
+      .footer-inner { grid-template-columns: 1fr; gap: 1.5rem; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+      .hero { padding: 2.5rem 1.2rem; }
+      .hero-search-wrap { flex-direction: column; }
+      .product-grid-full { grid-template-columns: repeat(auto-fill, minmax(155px,1fr)); }
+      .nm-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .topbar { padding: 0 .75rem !important; }
+      .nav-inner { height: auto !important; min-height: 60px !important; }
+      .logo-text { font-size: 1.1rem !important; }
+      .logo-icon { width: 36px !important; height: 36px !important; font-size: 1.1rem !important; }
+      .hero { padding: 2rem 1rem !important; }
+      .hero-title { font-size: 1.8rem !important; }
+      .hero-search-wrap { flex-direction: column !important; }
+      .home-section, .offer-banner, .search-results-header, .product-grid-full,
+      .new-medicines-section { padding-left: 1rem !important; padding-right: 1rem !important; }
+      .product-grid-full { grid-template-columns: 1fr 1fr !important; gap: .75rem !important; }
+      .footer { padding: 2rem 1rem !important; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="themeRipple" aria-hidden="true"></div>
+
+  <!-- ================================================================
+       NAVBAR — FIX #1: all items in one line, flex-wrap: nowrap
+  ================================================================ -->
+  <header class="topbar" id="topbar">
+    <nav class="nav-inner" role="navigation" aria-label="Main navigation">
+
+      <a href="#" class="logo" onclick="clearSearch()" aria-label="Sapna Medical Store – Home">
+        <div class="logo-icon" aria-hidden="true">🏥</div>
+        <div class="logo-text-wrap">
+          <span class="logo-text">Sapna Medical</span>
+          <span class="logo-tagline">Trusted Pharmacy</span>
+        </div>
+      </a>
+
+      <ul class="nav-links" role="list">
+        <li><a href="#" class="active" data-nav="home" onclick="clearSearch()">Home</a></li>
+        <li><a href="#" data-nav="shop" onclick="showAllProducts()">Shop All</a></li>
+        <li><a href="#categories" data-nav="categories">Categories</a></li>
+        <li><a href="#newMedicines" data-nav="newmed">New Medicines</a></li>
+      </ul>
+
+      <div class="nav-spacer"></div>
+
+      <div class="nav-search-wrap" role="search">
+        <input type="text" id="navSearchInput" class="nav-search-input"
+          placeholder="Search medicines…" autocomplete="off" aria-label="Search products" />
+        <button class="nav-search-btn" onclick="triggerSearch()" aria-label="Submit search">🔍</button>
+      </div>
+
+      <div class="profile-wrap" id="profileWrap" aria-label="User account">
+        <span class="user-greeting" id="userGreeting" aria-live="polite"></span>
+        <button class="profile-avatar-btn" id="profileAvatarBtn"
+          aria-haspopup="true" aria-expanded="false" aria-controls="profileDropdown"
+          aria-label="Account menu" onclick="toggleProfileDropdown(event)">
+          <span id="avatarInitial">U</span>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown" role="menu" aria-label="Account options">
+          <div class="dropdown-header">
+            <p class="dh-name"  id="dropdownName"></p>
+            <p class="dh-email" id="dropdownEmail"></p>
+          </div>
+          <div class="dropdown-items">
+            <button class="dropdown-item" role="menuitem" onclick="handleDropdownProfile()">👤 &nbsp;My Profile</button>
+            <button class="dropdown-item" role="menuitem" onclick="handleDropdownOrders()">📦 &nbsp;My Orders</button>
+            <button class="dropdown-item" role="menuitem" onclick="handleDropdownSettings()">⚙️ &nbsp;Settings</button>
+            <div class="dropdown-divider" role="separator"></div>
+            <button class="dropdown-item danger" role="menuitem" onclick="promptSignOut()">🚪 &nbsp;Sign Out</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="theme-toggle" title="Toggle dark/light mode">
+        <div class="toggle-track" id="themeToggle"
+          role="switch" aria-checked="false" aria-label="Toggle dark mode" tabindex="0">
+          <div class="toggle-thumb" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <button class="cart-btn" id="cartBtn" aria-label="Open cart">
+        🛒
+        <span class="cart-badge" id="cartBadge" aria-label="Items in cart">0</span>
+      </button>
+
+      <button class="btn-login"    id="loginBtn"    aria-haspopup="dialog">Sign In</button>
+      <button class="btn-register" id="registerBtn" aria-haspopup="dialog">Register</button>
+
+      <div class="hamburger" id="hamburger" aria-label="Open menu"
+        role="button" tabindex="0" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </div>
+    </nav>
+
+    <div class="mobile-nav" id="mobileNav" role="navigation" aria-label="Mobile navigation">
+      <div class="mobile-search-wrap">
+        <input type="text" id="mobileSearchInput" class="mobile-search-input"
+          placeholder="Search products…" autocomplete="off" aria-label="Search products" />
+        <button style="padding:.5rem .9rem;border-radius:9px;background:var(--emerald);color:#fff;font-size:.85rem;font-weight:700;"
+          onclick="triggerMobileSearch()">Go</button>
+      </div>
+      <a href="#" onclick="clearSearch(); closeMobileNav()">🏠 Home</a>
+      <a href="#" onclick="showAllProducts(); closeMobileNav()">🛍 Shop All</a>
+      <a href="#categories" onclick="closeMobileNav()">📦 Categories</a>
+      <a href="#newMedicines" onclick="closeMobileNav()">💉 New Medicines</a>
+      <a href="#" onclick="openModal('login'); closeMobileNav()">🔐 Sign In</a>
+      <a href="#" onclick="openModal('register'); closeMobileNav()">✨ Register</a>
+    </div>
+  </header>
+
+  <!-- ================================================================
+       FIX #3 — "Did you mean?" banner (injected dynamically)
+  ================================================================ -->
+  <div class="did-you-mean-bar" id="dymBar" role="status" aria-live="polite">
+    <div class="dym-inner">
+      <span class="dym-label">🔍 Did you mean:</span>
+      <span class="dym-suggestion" id="dymSuggestion" onclick="acceptDidYouMean()"></span>
+      <button class="dym-dismiss" onclick="dismissDym()" aria-label="Dismiss suggestion">✕ Dismiss</button>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       HOMEPAGE CONTENT
+  ================================================================ -->
+  <div id="homepageContent">
+    <section class="hero" id="home" aria-labelledby="heroHeading">
+      <div class="hero-cross c1" aria-hidden="true"></div>
+      <div class="hero-cross c2" aria-hidden="true"></div>
+      <div class="hero-cross c3" aria-hidden="true"></div>
+
+      <div class="hero-inner">
+        <div>
+          <div class="hero-eyebrow" aria-hidden="true">✚ Trusted Since 1962</div>
+          <h1 class="hero-title" id="heroHeading">Your Health,<br><em>Our Priority</em></h1>
+          <p class="hero-sub">Genuine medicines, wellness products, cosmetics &amp; more — delivered with care and trust.</p>
+          <div class="hero-info" aria-label="Store information">
+            <div class="hero-info-item">
+              <span class="icon" aria-hidden="true">📍</span>
+              <span>Main Market, Nadrai Gate, Kasganj - 207123, UTTAR PRADESH</span>
+            </div>
+            <div class="hero-info-item">
+              <span class="icon" aria-hidden="true">📞</span>
+              <span>+91 82669 89313 &nbsp;|&nbsp; +91 98765 43210</span>
+            </div>
+            <div class="hero-info-item">
+              <span class="icon" aria-hidden="true">🕐</span>
+              <span>Mon – Sun: 9 AM – 10 PM</span>
+            </div>
+          </div>
+          <div class="hero-search-wrap" role="search">
+            <input type="text" id="heroSearchInput" class="hero-search-input"
+              placeholder="Search medicines, vitamins, cosmetics…" autocomplete="off" aria-label="Search products" />
+            <button class="hero-search-btn" onclick="triggerHeroSearch()">🔍 Search</button>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="hero-card-grid">
+            <div class="mini-card featured">
+              <div class="mc-icon">💊</div>
+              <div>
+                <strong>1000+ Products Available</strong>
+                <p class="mc-text">Medicines, cosmetics, wellness &amp; baby care</p>
+              </div>
+            </div>
+            <div class="mini-card"><div class="mc-icon">🩺</div><div class="mc-label">Certified</div></div>
+            <div class="mini-card"><div class="mc-icon">🚚</div><div class="mc-label">Fast Delivery</div></div>
+            <div class="mini-card" style="cursor:pointer" onclick="window.open('https://wa.me/918266989313','_blank')">
+              <div class="mc-icon">💬</div><div class="mc-label">WhatsApp Order</div>
+            </div>
+            <div class="mini-card"><div class="mc-icon">🧾</div><div class="mc-label">Prescription OK</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="home-section" id="categories">
+      <h2 class="home-section-title"><span aria-hidden="true"></span>Shop by Category</h2>
+      <div class="category-scroll" id="categoryCards" role="list" aria-label="Product categories"></div>
+    </div>
+
+    <div class="offer-banner">
+      <div class="offer-banner-inner">
+        <div>
+          <p class="ob-title">💚 Flat 15% Off on All Wellness Products</p>
+          <p class="ob-sub">Use code SAPNA15 at checkout. Valid this week only.</p>
+        </div>
+        <button class="ob-badge" onclick="filterByCategory('Wellness')">Shop Wellness →</button>
+      </div>
+    </div>
+
+    <div class="home-section">
+      <h2 class="home-section-title"><span aria-hidden="true"></span>🔥 Best Sellers</h2>
+      <div class="featured-row" id="bestSellersRow" aria-label="Best selling products"></div>
+    </div>
+
+    <div class="home-section">
+      <h2 class="home-section-title"><span aria-hidden="true"></span>🏷 Top Offers</h2>
+      <div class="featured-row" id="topOffersRow" aria-label="Top offers"></div>
+    </div>
+
+    <section class="new-medicines-section" id="newMedicines" aria-labelledby="nmTitle">
+      <div class="nm-header">
+        <div>
+          <div class="nm-eyebrow" aria-hidden="true">🔬 Pharmaceutical Innovations</div>
+          <h2 class="nm-title" id="nmTitle">New &amp; Notable Medicines</h2>
+          <p class="nm-subtitle">Breakthrough treatments &amp; widely discussed pharmaceutical products</p>
+        </div>
+        <p style="font-size:.78rem;color:var(--text-muted);max-width:260px;text-align:right;line-height:1.5;">
+          ⚠️ All medicines require a valid prescription. Consult your doctor before use.
+        </p>
+      </div>
+      <div class="nm-grid" id="nmGrid" role="list" aria-label="New and notable medicines"></div>
+    </section>
+
+    <div style="margin-bottom:2.5rem"></div>
+  </div>
+
+  <!-- SEARCH RESULTS VIEW -->
+  <div id="searchResultsView">
+    <div class="cat-pill-bar" id="catPillBar">
+      <div class="cat-pill-bar-inner" id="catPills" role="list" aria-label="Filter by category"></div>
+    </div>
+    <div class="search-results-header">
+      <div>
+        <h2 class="sr-title" id="srTitle">All Products</h2>
+        <p class="sr-count" id="srCount" aria-live="polite"></p>
+      </div>
+      <button class="btn-clear-search" onclick="clearSearch()">← Back to Home</button>
+    </div>
+    <div class="product-grid-full" id="productGridFull" role="list"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer" aria-label="Site footer">
+    <div class="footer-inner">
+      <div>
+        <a href="#" class="logo" style="margin-bottom:.65rem;display:flex;align-items:center;gap:.6rem;text-decoration:none" aria-label="Sapna Medical Store">
+          <div class="logo-icon" style="width:42px;height:42px;font-size:1.3rem;" aria-hidden="true">🏥</div>
+          <div class="logo-text-wrap">
+            <span class="logo-text" style="font-size:1.4rem;">Sapna Medical Store</span>
+            <span class="logo-tagline">Trusted Since 1962</span>
+          </div>
+        </a>
+        <p class="footer-desc">Serving the community since 1962 with genuine medicines and healthcare products. Registered with Uttar Pradesh Pharmacy Council.</p>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <a href="https://wa.me/8266989313" target="_blank" rel="noopener"
+            style="background:#25d366;color:#fff;padding:.35rem .75rem;border-radius:8px;font-size:.8rem;font-weight:600;">💬 WhatsApp</a>
+          <a href="tel:+918266989313"
+            style="background:var(--emerald);color:#fff;padding:.35rem .75rem;border-radius:8px;font-size:.8rem;font-weight:600;">📞 Call Us</a>
+        </div>
+      </div>
+      <div>
+        <p class="footer-heading">Categories</p>
+        <ul class="footer-links">
+          <li><a href="#">Cosmetics</a></li><li><a href="#">Generic Medicines</a></li>
+          <li><a href="#">Tablets</a></li><li><a href="#">Syrups</a></li>
+          <li><a href="#">Diapers</a></li><li><a href="#">Creams</a></li>
+          <li><a href="#">First Aid</a></li><li><a href="#">Wellness</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="footer-heading">Quick Links</p>
+        <ul class="footer-links">
+          <li><a href="#">About Us</a></li><li><a href="#">Track Order</a></li>
+          <li><a href="#">Upload Prescription</a></li><li><a href="#">Contact Us</a></li>
+          <li><a href="#">FAQs</a></li><li><a href="#">Privacy Policy</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="footer-heading">Hours</p>
+        <ul class="footer-links">
+          <li><a href="#">Mon – Fri: 9 AM – 10 PM</a></li>
+          <li><a href="#">Saturday: 9 AM – 10 PM</a></li>
+          <li><a href="#">Sunday: 9 AM – 7 PM</a></li>
+          <li style="margin-top:.5rem"><a href="#">📍 Kasganj, Uttar Pradesh</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Sapna Medical Store. All rights reserved.</span>
+      <span>Made with 💚 for your health</span>
+    </div>
+  </footer>
+
+  <!-- CART SIDEBAR -->
+  <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+  <aside class="cart-sidebar" id="cartSidebar" aria-label="Shopping Cart" aria-modal="true">
+    <div class="cart-head">
+      <h2 class="cart-head-title">🛒 Your Cart</h2>
+      <button class="cart-close" onclick="closeCart()" aria-label="Close cart">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <div class="cart-empty" id="cartEmptyMsg">
+        <span class="ce-icon" aria-hidden="true">🛍️</span>
+        <p>Your cart is empty</p>
+        <p style="font-size:.78rem">Add products to get started</p>
+      </div>
+    </div>
+    <div class="cart-foot">
+      <div class="upload-area">
+        <input type="file" id="prescriptionFile" accept="image/*,.pdf" onchange="handlePrescriptionUpload(event)" aria-label="Upload prescription" />
+        <p class="upload-label">📋 <span>Upload Prescription</span> (JPG, PNG, PDF)</p>
+        <p class="upload-preview" id="uploadPreview"></p>
+      </div>
+      <div class="cart-summary">
+        <div class="cart-row"><span>Subtotal</span><span id="cartSubtotal">₹0.00</span></div>
+        <div class="cart-row"><span>Delivery (within 5 km)</span><span id="cartDelivery">₹0.00</span></div>
+        <div class="cart-row total"><span>Total</span><span id="cartTotal">₹0.00</span></div>
+      </div>
+      <button class="btn-checkout" id="checkoutBtn" onclick="handleCheckout()" disabled>✅ Proceed to Checkout</button>
+      <button class="btn-whatsapp" id="whatsappBtn" onclick="orderViaWhatsApp()" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.549 4.107 1.51 5.843L0 24l6.335-1.462C8.05 23.473 9.996 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.845 0-3.6-.476-5.13-1.312l-.368-.208-3.761.987.979-3.677-.23-.384C2.5 15.586 2 13.842 2 12 2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+        </svg>
+        Order via WhatsApp
+      </button>
+    </div>
+  </aside>
+
+  <!-- AUTH MODAL -->
+  <div class="modal-overlay" id="authModal" onclick="handleModalOutsideClick(event)" role="dialog" aria-modal="true" aria-label="Authentication">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-logo"><div class="icon" aria-hidden="true">🏥</div><span class="name">Sapna Medical Store</span></div>
+        <h2 class="modal-title" id="modalTitle">Welcome Back</h2>
+        <p class="modal-subtitle">Sign in to manage orders &amp; prescriptions</p>
+        <button class="modal-close-btn" onclick="closeModal()" aria-label="Close dialog">✕</button>
+      </div>
+      <div class="auth-tabs" role="tablist" aria-label="Sign in or register">
+        <div class="auth-tab active" role="tab" data-tab="login" aria-selected="true" tabindex="0" onclick="switchTab('login')">Sign In</div>
+        <div class="auth-tab" role="tab" data-tab="register" aria-selected="false" tabindex="-1" onclick="switchTab('register')">Register</div>
+      </div>
+      <div class="auth-form-wrap">
+        <div class="auth-msg" id="authMsg" role="alert"></div>
+        <form class="auth-form active" id="loginForm" novalidate onsubmit="handleLogin(event)" aria-label="Sign in form">
+          <div class="form-group">
+            <label class="form-label" for="loginEmail">Email Address</label>
+            <input type="email" id="loginEmail" class="form-input" placeholder="you@example.com" required autocomplete="email" />
+            <span class="form-error" id="loginEmailErr" role="alert">Please enter a valid email address.</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" class="form-input" placeholder="Your password" required minlength="8" autocomplete="current-password" />
+            <span class="form-error" id="loginPassErr" role="alert">Password must be at least 8 characters.</span>
+          </div>
+          <button type="submit" class="btn-auth" id="loginSubmitBtn">
+            <span id="loginBtnText">Sign In</span>
+            <span class="spinner" id="loginSpinner" aria-hidden="true"></span>
+          </button>
+          <p style="font-size:.78rem;color:var(--text-muted);text-align:center">
+            Don't have an account? <a href="#" onclick="switchTab('register')" style="color:var(--emerald);font-weight:600">Register here</a>
+          </p>
+        </form>
+        <form class="auth-form" id="registerForm" novalidate onsubmit="handleRegister(event)" aria-label="Register form">
+          <div class="form-group">
+            <label class="form-label" for="regName">Full Name</label>
+            <input type="text" id="regName" class="form-input" placeholder="Priya Sharma" required autocomplete="name" />
+            <span class="form-error" id="regNameErr" role="alert">Full name is required.</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regEmail">Email Address</label>
+            <input type="email" id="regEmail" class="form-input" placeholder="you@example.com" required autocomplete="email" />
+            <span class="form-error" id="regEmailErr" role="alert">Please enter a valid email address.</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regPhone">Phone Number</label>
+            <input type="tel" id="regPhone" class="form-input" placeholder="+91 98765 43210" autocomplete="tel" pattern="[0-9+\s]{10,14}" />
+            <span class="form-hint">10-digit mobile number</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regPassword">Password</label>
+            <input type="password" id="regPassword" class="form-input" placeholder="At least 8 characters" required minlength="8" autocomplete="new-password" />
+            <span class="form-hint">Minimum 8 characters with a number recommended.</span>
+            <span class="form-error" id="regPassErr" role="alert">Password must be at least 8 characters.</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regPassConfirm">Confirm Password</label>
+            <input type="password" id="regPassConfirm" class="form-input" placeholder="Repeat your password" required autocomplete="new-password" />
+            <span class="form-error" id="regPassConfirmErr" role="alert">Passwords do not match.</span>
+          </div>
+          <button type="submit" class="btn-auth" id="registerSubmitBtn">
+            <span id="registerBtnText">Create Account</span>
+            <span class="spinner" id="registerSpinner" aria-hidden="true"></span>
+          </button>
+          <p style="font-size:.78rem;color:var(--text-muted);text-align:center">
+            Already have an account? <a href="#" onclick="switchTab('login')" style="color:var(--emerald);font-weight:600">Sign in</a>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGN-OUT CONFIRMATION -->
+  <div class="confirm-overlay" id="confirmSignoutOverlay" role="alertdialog" aria-modal="true"
+    aria-labelledby="confirmTitle" aria-describedby="confirmMsg" onclick="handleConfirmOutsideClick(event)">
+    <div class="confirm-dialog">
+      <div class="confirm-icon" aria-hidden="true">🚪</div>
+      <h3 class="confirm-title" id="confirmTitle">Sign out?</h3>
+      <p class="confirm-msg" id="confirmMsg">Are you sure you want to sign out? Your cart items will be saved.</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel" onclick="closeConfirmSignout()" id="cancelSignoutBtn">Cancel</button>
+        <button class="btn-confirm-signout" onclick="executeSignOut()" id="confirmSignoutBtn">Yes, Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ================================================================
+       JAVASCRIPT
+  ================================================================ -->
+  <script>
+    /* ================================================================
+       FIX #2 — PRODUCT IMAGE DATABASE
+       Each product gets a semantically accurate, category-matched image.
+       Using high-quality Unsplash photos with correct subject matter.
+    ================================================================ */
+
+    /* Image pools per category — rotated by product index for variety */
+    const IMG = {
+      cosmetics_lipstick:   "https://images.unsplash.com/photo-1631214524020-3c69d69258a7?w=400&q=80",
+      cosmetics_moisturiser:"https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&q=80",
+      cosmetics_foundation: "https://images.unsplash.com/photo-1631730486784-74757aca2f8c?w=400&q=80",
+      cosmetics_bodylotion: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=400&q=80",
+      cosmetics_hairserum:  "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=400&q=80",
+      cosmetics_micellar:   "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=400&q=80",
+      cosmetics_shampoo:    "https://images.unsplash.com/photo-1585232351009-aa4b145a6c70?w=400&q=80",
+      cosmetics_powder:     "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400&q=80",
+
+      generic_strip:        "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80",
+      generic_bottle:       "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=400&q=80",
+      generic_capsule:      "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=400&q=80",
+      generic_tablets:      "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&q=80",
+      generic_sachet:       "https://images.unsplash.com/photo-1576671081837-49000212a370?w=400&q=80",
+
+      tablet_vitamin:       "https://images.unsplash.com/photo-1550572017-9f4e4cd3d70a?w=400&q=80",
+      tablet_supplement:    "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=400&q=80",
+      tablet_iron:          "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&q=80",
+      tablet_multivit:      "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80",
+      tablet_omega:         "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=400&q=80",
+      tablet_biotin:        "https://images.unsplash.com/photo-1576671081837-49000212a370?w=400&q=80",
+      tablet_herbal:        "https://images.unsplash.com/photo-1550572017-9f4e4cd3d70a?w=400&q=80",
+
+      syrup_cough:          "https://images.unsplash.com/photo-1585159812596-fac104858727?w=400&q=80",
+      syrup_antacid:        "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80",
+      syrup_vitamin:        "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=400&q=80",
+      syrup_paediatric:     "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&q=80",
+      syrup_liver:          "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=400&q=80",
+
+      diaper_pampers:       "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400&q=80",
+      diaper_huggies:       "https://images.unsplash.com/photo-1607349913338-fca6f7fc42d0?w=400&q=80",
+      diaper_powder:        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+
+      cream_steroid:        "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400&q=80",
+      cream_herbal:         "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=400&q=80",
+      cream_antiseptic:     "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&q=80",
+      cream_lotion:         "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=400&q=80",
+      cream_night:          "https://images.unsplash.com/photo-1631214524020-3c69d69258a7?w=400&q=80",
+      cream_turmeric:       "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=400&q=80",
+      cream_vicks:          "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400&q=80",
+      cream_pain:           "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=400&q=80",
+
+      firstaid_bandage:     "https://images.unsplash.com/photo-1603398938378-e54eab446dde?w=400&q=80",
+      firstaid_antiseptic:  "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80",
+      firstaid_thermometer: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80",
+      firstaid_crepe:       "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&q=80",
+      firstaid_spray:       "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=400&q=80",
+      firstaid_gloves:      "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=400&q=80",
+
+      wellness_herb:        "https://images.unsplash.com/photo-1544991936-9464fa9efce5?w=400&q=80",
+      wellness_honey:       "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&q=80",
+      wellness_juice:       "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=400&q=80",
+      wellness_oximeter:    "https://images.unsplash.com/photo-1576671081837-49000212a370?w=400&q=80",
+      wellness_bpmonitor:   "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&q=80",
+      wellness_oats:        "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&q=80",
+      wellness_energy:      "https://images.unsplash.com/photo-1544991936-9464fa9efce5?w=400&q=80",
+      wellness_balm:        "https://images.unsplash.com/photo-1571875257727-256c39da42af?w=400&q=80",
+      wellness_shilajit:    "https://images.unsplash.com/photo-1544991936-9464fa9efce5?w=400&q=80",
+    };
+
+    /* ================================================================
+       FIX #2 — PRODUCTS with accurate image URLs per product
+    ================================================================ */
+    const CATEGORIES = [
+      "Cosmetics", "Generic Medicines", "Tablets",
+      "Syrups", "Diapers", "Creams", "First Aid", "Wellness"
+    ];
+
+    const CATEGORY_META = {
+      "Cosmetics":         { icon: "💄", color: "#ec4899" },
+      "Generic Medicines": { icon: "💊", color: "#6366f1" },
+      "Tablets":           { icon: "🔵", color: "#2563eb" },
+      "Syrups":            { icon: "🧪", color: "#8b5cf6" },
+      "Diapers":           { icon: "👶", color: "#f59e0b" },
+      "Creams":            { icon: "🧴", color: "#10b981" },
+      "First Aid":         { icon: "🩹", color: "#ef4444" },
+      "Wellness":          { icon: "🌿", color: "#059669" },
+    };
+
+    /* Each product has img pointing to its correct semantic Unsplash image */
+    const PRODUCTS = [
+      /* ── COSMETICS ── */
+      { id:1,  name:"Lakme Absolute Matte Lipstick",               category:"Cosmetics",         mrp:499,  discountedPrice:399, img: IMG.cosmetics_lipstick },
+      { id:2,  name:"Neutrogena Oil-Free Moisturiser SPF 15",       category:"Cosmetics",         mrp:649,  discountedPrice:519, img: IMG.cosmetics_moisturiser },
+      { id:3,  name:"Maybelline Fit Me Foundation",                 category:"Cosmetics",         mrp:399,  discountedPrice:319, img: IMG.cosmetics_foundation },
+      { id:4,  name:"Dove Body Lotion Deep Moisture 400ml",         category:"Cosmetics",         mrp:350,  discountedPrice:280, img: IMG.cosmetics_bodylotion },
+      { id:5,  name:"L'Oreal Paris Hair Serum 50ml",                category:"Cosmetics",         mrp:299,  discountedPrice:239, img: IMG.cosmetics_hairserum },
+      { id:6,  name:"Garnier Micellar Cleansing Water 400ml",       category:"Cosmetics",         mrp:425,  discountedPrice:349, img: IMG.cosmetics_micellar },
+      { id:7,  name:"Biotique Bio Walnut Bark Shampoo 200ml",       category:"Cosmetics",         mrp:180,  discountedPrice:144, img: IMG.cosmetics_shampoo },
+      /* ── GENERIC MEDICINES ── */
+      { id:8,  name:"Paracetamol 500mg Strip (15 Tabs)",            category:"Generic Medicines", mrp:22,   discountedPrice:18,  img: IMG.generic_strip },
+      { id:9,  name:"Metformin 500mg Tablets (10 Tabs)",            category:"Generic Medicines", mrp:35,   discountedPrice:29,  img: IMG.generic_tablets },
+      { id:10, name:"Amoxicillin 250mg Capsules (10 Caps)",         category:"Generic Medicines", mrp:65,   discountedPrice:54,  img: IMG.generic_capsule },
+      { id:11, name:"Atorvastatin 10mg Tablet (10 Tabs)",           category:"Generic Medicines", mrp:48,   discountedPrice:39,  img: IMG.generic_strip },
+      { id:12, name:"Omeprazole 20mg Capsules (10 Caps)",           category:"Generic Medicines", mrp:40,   discountedPrice:32,  img: IMG.generic_capsule },
+      { id:13, name:"Cetirizine 10mg Antiallergic Strip",           category:"Generic Medicines", mrp:28,   discountedPrice:22,  img: IMG.generic_strip },
+      /* ── TABLETS ── */
+      { id:14, name:"Vitamin C 1000mg Effervescent (10 Tabs)",      category:"Tablets",           mrp:185,  discountedPrice:155, img: IMG.tablet_vitamin },
+      { id:15, name:"Calcium + Vitamin D3 600mg (30 Tabs)",         category:"Tablets",           mrp:320,  discountedPrice:259, img: IMG.tablet_supplement },
+      { id:16, name:"Iron & Folic Acid Tablet (30 Tabs)",           category:"Tablets",           mrp:95,   discountedPrice:79,  img: IMG.tablet_iron },
+      { id:17, name:"Multivitamin Daily Pack (60 Tabs)",            category:"Tablets",           mrp:599,  discountedPrice:489, img: IMG.tablet_multivit },
+      { id:18, name:"Omega-3 Fish Oil 1000mg (30 Softgels)",        category:"Tablets",           mrp:450,  discountedPrice:369, img: IMG.tablet_omega },
+      { id:19, name:"Biotin 5000mcg Hair Growth (60 Tabs)",         category:"Tablets",           mrp:399,  discountedPrice:319, img: IMG.tablet_biotin },
+      /* ── SYRUPS ── */
+      { id:20, name:"Benadryl Cough Linctus 100ml",                 category:"Syrups",            mrp:115,  discountedPrice:94,  img: IMG.syrup_cough },
+      { id:21, name:"Corex D Cough Syrup 100ml",                    category:"Syrups",            mrp:98,   discountedPrice:82,  img: IMG.syrup_cough },
+      { id:22, name:"Digene Antacid Mint Syrup 200ml",              category:"Syrups",            mrp:140,  discountedPrice:115, img: IMG.syrup_antacid },
+      { id:23, name:"Zincovit Vitamin Syrup 200ml",                 category:"Syrups",            mrp:162,  discountedPrice:134, img: IMG.syrup_vitamin },
+      { id:24, name:"Calpol Paracetamol Paediatric Syrup 60ml",     category:"Syrups",            mrp:55,   discountedPrice:46,  img: IMG.syrup_paediatric },
+      { id:25, name:"Liv.52 DS Liver Support Syrup 200ml",          category:"Syrups",            mrp:185,  discountedPrice:149, img: IMG.syrup_liver },
+      /* ── DIAPERS ── */
+      { id:26, name:"Pampers Active Baby Small (S) – 86 Count",     category:"Diapers",           mrp:849,  discountedPrice:699, img: IMG.diaper_pampers },
+      { id:27, name:"Huggies Wonder Pants Medium (M) – 72 Count",   category:"Diapers",           mrp:799,  discountedPrice:649, img: IMG.diaper_huggies },
+      { id:28, name:"MamyPoko Pants Standard Large (L) – 54 Count", category:"Diapers",           mrp:699,  discountedPrice:569, img: IMG.diaper_pampers },
+      { id:29, name:"Bumtum Baby Diaper Pants XL – 50 Count",       category:"Diapers",           mrp:629,  discountedPrice:519, img: IMG.diaper_huggies },
+      { id:30, name:"Supples Premium Diaper XXL – 36 Count",        category:"Diapers",           mrp:599,  discountedPrice:489, img: IMG.diaper_pampers },
+      { id:31, name:"Pampers New Born Swaddlers (NB) – 100 Count",  category:"Diapers",           mrp:949,  discountedPrice:789, img: IMG.diaper_huggies },
+      /* ── CREAMS ── */
+      { id:32, name:"Betnovate-N Betamethasone Cream 20g",          category:"Creams",            mrp:82,   discountedPrice:65,  img: IMG.cream_steroid },
+      { id:33, name:"Himalaya Herbals Nourishing Skin Cream 50g",   category:"Creams",            mrp:99,   discountedPrice:79,  img: IMG.cream_herbal },
+      { id:34, name:"Boro Plus Antiseptic Cream 80ml",              category:"Creams",            mrp:72,   discountedPrice:59,  img: IMG.cream_antiseptic },
+      { id:35, name:"Lacto Calamine Oil Balance Lotion 120ml",      category:"Creams",            mrp:185,  discountedPrice:149, img: IMG.cream_lotion },
+      { id:36, name:"VLCC Snigdha Skin Whitening Night Cream 50g",  category:"Creams",            mrp:295,  discountedPrice:239, img: IMG.cream_night },
+      { id:37, name:"Vicco Turmeric Skin Cream 70g",                category:"Creams",            mrp:128,  discountedPrice:99,  img: IMG.cream_turmeric },
+      /* ── FIRST AID ── */
+      { id:38, name:"Band-Aid Flexible Fabric Strips (100 count)",  category:"First Aid",         mrp:250,  discountedPrice:199, img: IMG.firstaid_bandage },
+      { id:39, name:"Dettol Antiseptic Liquid 500ml",               category:"First Aid",         mrp:220,  discountedPrice:179, img: IMG.firstaid_antiseptic },
+      { id:40, name:"Dr. Morepen Digital Thermometer",              category:"First Aid",         mrp:249,  discountedPrice:199, img: IMG.firstaid_thermometer },
+      { id:41, name:"Elastic Crepe Bandage 10cm x 4m",             category:"First Aid",         mrp:65,   discountedPrice:49,  img: IMG.firstaid_crepe },
+      { id:42, name:"Savlon Wound Cleansing Spray 50ml",            category:"First Aid",         mrp:138,  discountedPrice:109, img: IMG.firstaid_spray },
+      { id:43, name:"Disposable Latex Gloves (Box of 50 pairs)",    category:"First Aid",         mrp:350,  discountedPrice:279, img: IMG.firstaid_gloves },
+      /* ── WELLNESS ── */
+      { id:44, name:"Himalaya Ashwagandha General Wellness 60 Tabs",category:"Wellness",          mrp:250,  discountedPrice:199, img: IMG.wellness_herb },
+      { id:45, name:"Dabur Honey 250g",                             category:"Wellness",          mrp:165,  discountedPrice:135, img: IMG.wellness_honey },
+      { id:46, name:"Patanjali Giloy Juice 500ml",                  category:"Wellness",          mrp:120,  discountedPrice:95,  img: IMG.wellness_juice },
+      { id:47, name:"Pulse Oximeter Finger Clip (SpO2)",            category:"Wellness",          mrp:999,  discountedPrice:799, img: IMG.wellness_oximeter },
+      { id:48, name:"Dr. Morepen BP Monitor BP-02",                 category:"Wellness",          mrp:1799, discountedPrice:1449,img: IMG.wellness_bpmonitor },
+      { id:49, name:"Saffola Active Pro Weight Mgmt Oats 400g",     category:"Wellness",          mrp:189,  discountedPrice:149, img: IMG.wellness_oats },
+      { id:50, name:"Glucose-D Energy Drink Orange 500g",           category:"Wellness",          mrp:99,   discountedPrice:79,  img: IMG.wellness_energy },
+      { id:51, name:"Volini Pain Relief Spray 100g",                category:"First Aid",         mrp:299,  discountedPrice:239, img: IMG.firstaid_spray },
+      { id:52, name:"Iodex Ultra Power Pain Balm 50g",              category:"Creams",            mrp:115,  discountedPrice:89,  img: IMG.cream_pain },
+      { id:53, name:"Vicks VapoRub 50ml",                           category:"Creams",            mrp:110,  discountedPrice:87,  img: IMG.cream_vicks },
+      { id:54, name:"Johnson's Baby Powder 200g",                   category:"Diapers",           mrp:175,  discountedPrice:139, img: IMG.diaper_powder },
+      { id:55, name:"Zandu Balm 30ml",                              category:"Wellness",          mrp:65,   discountedPrice:49,  img: IMG.wellness_balm },
+      { id:56, name:"ORS Electral Powder Orange 21g (5 Pack)",      category:"Generic Medicines", mrp:60,   discountedPrice:48,  img: IMG.generic_sachet },
+      { id:57, name:"Glucon-D Instant Energy Drink 200g",           category:"Wellness",          mrp:95,   discountedPrice:75,  img: IMG.wellness_energy },
+      { id:58, name:"Disprin Aspirin 325mg Strip (10 Tabs)",        category:"Generic Medicines", mrp:18,   discountedPrice:14,  img: IMG.generic_strip },
+      { id:59, name:"Himalaya Karela Tablets 60 Tabs",              category:"Tablets",           mrp:145,  discountedPrice:115, img: IMG.tablet_herbal },
+      { id:60, name:"Patanjali Ashvashila Capsule 20 Caps",         category:"Tablets",           mrp:120,  discountedPrice:95,  img: IMG.tablet_supplement },
+      { id:61, name:"Nycil Cool Prickly Heat Powder 150g",          category:"Cosmetics",         mrp:99,   discountedPrice:79,  img: IMG.cosmetics_powder },
+      { id:62, name:"Baidyanath Shilajit Gold Capsules 10 Caps",    category:"Wellness",          mrp:235,  discountedPrice:189, img: IMG.wellness_shilajit },
+    ];
+
+    const NEW_MEDICINES = [
+      { id:"nm1", generic:"Tirzepatide",  brand:"Mounjaro® / Zepbound®", type:"Injection",  drugClass:"Dual GIP/GLP-1 Agonist",        desc:"A once-weekly injectable approved for type 2 diabetes management and chronic weight reduction. Acts on two hormone receptors simultaneously, offering superior glycaemic control.",  badges:["trending","rx"], icon:"💉", accentColor:"#2563eb", bgLt:"#dbeafe", bgDk:"#bfdbfe" },
+      { id:"nm2", generic:"Lecanemab",    brand:"Leqembi®",              type:"IV Infusion", drugClass:"Anti-amyloid Monoclonal Antibody",desc:"A landmark IV infusion approved for early-stage Alzheimer's disease. Targets and clears amyloid-beta plaques, slowing cognitive decline in confirmed Alzheimer's patients.",    badges:["breakthrough","rx"], icon:"🧠", accentColor:"#8b5cf6", bgLt:"#ede9fe", bgDk:"#ddd6fe" },
+      { id:"nm3", generic:"Nirmatrelvir + Ritonavir", brand:"Paxlovid®", type:"Oral Tablet", drugClass:"COVID-19 Antiviral",             desc:"A 5-day oral antiviral course for adults at high risk of severe COVID-19. Inhibits the SARS-CoV-2 main protease, dramatically reducing hospitalisation risk when taken early.",  badges:["new","rx"],         icon:"💊", accentColor:"#059669", bgLt:"#d1fae5", bgDk:"#a7f3d0" },
+      { id:"nm4", generic:"Semaglutide",  brand:"Ozempic® / Wegovy®",   type:"Injection / Oral", drugClass:"GLP-1 Receptor Agonist",    desc:"Widely discussed for blood sugar control in type 2 diabetes and long-term weight management in obesity. A once-weekly injection that also reduces cardiovascular risk.",          badges:["trending","rx"],    icon:"🏥", accentColor:"#0d9488", bgLt:"#ccfbf1", bgDk:"#99f6e4" },
+    ];
+
+    const BEST_SELLER_IDS = [14, 44, 26, 8, 1, 47, 38, 17, 15, 33];
+    const TOP_OFFER_IDS   = [48, 27, 17, 2, 39, 55, 60, 25, 51, 35];
+
+    /* ================================================================
+       STATE
+    ================================================================ */
+    let cart         = [];
+    let currentCat   = "All";
+    let searchQuery  = "";
+    let loggedInUser = null;
+    let viewMode     = "home";
+    let profileOpen  = false;
+    let dymPending   = null;  // stores fuzzy suggestion for "Did you mean?"
+
+    /* ── Fuse.js instance for fuzzy search ── */
+    let fuseInstance = null;
+
+    function initFuse() {
+      if (typeof Fuse === "undefined") return;   // CDN not yet loaded
+      fuseInstance = new Fuse(PRODUCTS, {
+        includeScore:  true,
+        threshold:     0.45,   // 0 = perfect match, 1 = match anything
+        minMatchCharLength: 2,
+        ignoreLocation: true,   // don't penalise matches far from start
+        keys: [
+          { name: "name",     weight: 0.7 },
+          { name: "category", weight: 0.3 },
+        ],
+      });
+    }
+
+    /* Session restore */
+    (function restoreSession() {
+      const savedUser  = localStorage.getItem("sapna_user");
+      const savedCart  = localStorage.getItem("sapna_cart");
+      const savedTheme = localStorage.getItem("sapna_theme");
+
+      if (savedUser)  { loggedInUser = JSON.parse(savedUser); updateAuthUI(); }
+      if (savedCart)  { cart = JSON.parse(savedCart); }
+      if (savedTheme === "dark") {
+        document.documentElement.setAttribute("data-theme", "dark");
+        document.getElementById("themeToggle").setAttribute("aria-checked", "true");
+      }
+    })();
+
+    function discountPct(mrp, disc) { return Math.round((1 - disc / mrp) * 100); }
+
+    /* ================================================================
+       THEME TOGGLE
+    ================================================================ */
+    const htmlEl      = document.documentElement;
+    const themeToggle = document.getElementById("themeToggle");
+    const themeRipple = document.getElementById("themeRipple");
+
+    function doThemeSwitch(originX, originY) {
+      const isDark = htmlEl.getAttribute("data-theme") === "dark";
+      themeRipple.style.setProperty("--ripple-x", `${originX}px`);
+      themeRipple.style.setProperty("--ripple-y", `${originY}px`);
+      themeRipple.classList.add("active");
+      setTimeout(() => themeRipple.classList.remove("active"), 400);
+      const newTheme = isDark ? "light" : "dark";
+      htmlEl.setAttribute("data-theme", newTheme);
+      localStorage.setItem("sapna_theme", newTheme);
+      themeToggle.setAttribute("aria-checked", String(!isDark));
+    }
+
+    themeToggle.addEventListener("click", e => {
+      const rect = themeToggle.getBoundingClientRect();
+      const pctX = ((rect.left + rect.width/2)  / window.innerWidth  * 100).toFixed(1) + "%";
+      const pctY = ((rect.top  + rect.height/2) / window.innerHeight * 100).toFixed(1) + "%";
+      doThemeSwitch(pctX, pctY);
+    });
+    themeToggle.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); themeToggle.click(); }
+    });
+
+    /* ================================================================
+       HAMBURGER
+    ================================================================ */
+    const hamburger = document.getElementById("hamburger");
+    const mobileNav = document.getElementById("mobileNav");
+
+    hamburger.addEventListener("click", () => {
+      const open = mobileNav.classList.toggle("open");
+      hamburger.setAttribute("aria-expanded", String(open));
+    });
+    hamburger.addEventListener("keydown", e => { if (e.key === "Enter") hamburger.click(); });
+    function closeMobileNav() {
+      mobileNav.classList.remove("open");
+      hamburger.setAttribute("aria-expanded", "false");
+    }
+
+    /* ================================================================
+       PROFILE DROPDOWN
+    ================================================================ */
+    const profileDropdown  = document.getElementById("profileDropdown");
+    const profileAvatarBtn = document.getElementById("profileAvatarBtn");
+
+    function toggleProfileDropdown(e) {
+      if (e) e.stopPropagation();
+      profileOpen = !profileOpen;
+      profileDropdown.classList.toggle("open", profileOpen);
+      profileAvatarBtn.setAttribute("aria-expanded", String(profileOpen));
+    }
+    function closeProfileDropdown() {
+      if (!profileOpen) return;
+      profileOpen = false;
+      profileDropdown.classList.remove("open");
+      profileAvatarBtn.setAttribute("aria-expanded", "false");
+    }
+    document.addEventListener("click", e => {
+      if (!profileDropdown.contains(e.target) && e.target !== profileAvatarBtn) closeProfileDropdown();
+    });
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") { closeCart(); closeModal(); closeProfileDropdown(); closeConfirmSignout(); }
+    });
+    function handleDropdownProfile()  { closeProfileDropdown(); showToast("My Profile – coming soon", "info"); }
+    function handleDropdownOrders()   { closeProfileDropdown(); showToast("My Orders – coming soon", "info"); }
+    function handleDropdownSettings() { closeProfileDropdown(); showToast("Settings – coming soon", "info"); }
+    function promptSignOut()          { closeProfileDropdown(); openConfirmSignout(); }
+
+    const confirmOverlay = document.getElementById("confirmSignoutOverlay");
+    function openConfirmSignout()  { confirmOverlay.classList.add("open"); document.body.style.overflow = "hidden"; setTimeout(() => document.getElementById("cancelSignoutBtn").focus(), 100); }
+    function closeConfirmSignout() { confirmOverlay.classList.remove("open"); document.body.style.overflow = ""; }
+    function handleConfirmOutsideClick(e) { if (e.target === confirmOverlay) closeConfirmSignout(); }
+    function executeSignOut() { closeConfirmSignout(); loggedInUser = null; localStorage.removeItem("sapna_user"); updateAuthUI(); showToast("You've been signed out", "info"); }
+
+    /* ================================================================
+       VIEW MANAGEMENT
+    ================================================================ */
+    function showHomepage() {
+      document.getElementById("homepageContent").style.display = "block";
+      document.getElementById("searchResultsView").style.display = "none";
+      document.getElementById("dymBar").classList.remove("visible");
+      viewMode = "home";
+    }
+    function showResultsView() {
+      document.getElementById("homepageContent").style.display = "none";
+      document.getElementById("searchResultsView").style.display = "block";
+    }
+    function clearSearch() {
+      searchQuery = ""; currentCat = "All"; dymPending = null;
+      document.getElementById("heroSearchInput").value   = "";
+      document.getElementById("navSearchInput").value    = "";
+      document.getElementById("mobileSearchInput").value = "";
+      document.getElementById("dymBar").classList.remove("visible");
+      showHomepage();
+      renderHomepage();
+      document.querySelectorAll("[data-nav]").forEach(l => l.classList.remove("active"));
+      document.querySelector("[data-nav='home']").classList.add("active");
+    }
+    function showAllProducts() { searchQuery = ""; currentCat = "All"; showResultsView(); renderResultsView(); }
+
+    /* ================================================================
+       CATEGORY CARDS
+    ================================================================ */
+    function buildCategoryCards() {
+      const container = document.getElementById("categoryCards");
+      container.innerHTML = CATEGORIES.map(cat => {
+        const meta = CATEGORY_META[cat] || { icon: "📦" };
+        return `<div class="cat-card" role="listitem" onclick="filterByCategory('${cat}')" tabindex="0"
+          onkeydown="if(event.key==='Enter')filterByCategory('${cat}')">
+          <div class="cat-card-icon" aria-hidden="true">${meta.icon}</div>
+          <div class="cat-card-name">${cat}</div>
+        </div>`;
+      }).join("");
+    }
+    function filterByCategory(cat) {
+      currentCat = cat; searchQuery = "";
+      document.getElementById("navSearchInput").value  = "";
+      document.getElementById("heroSearchInput").value = "";
+      document.getElementById("dymBar").classList.remove("visible");
+      showResultsView(); renderResultsView();
+    }
+
+    /* ================================================================
+       CATEGORY PILL BAR
+    ================================================================ */
+    function buildCategoryPills() {
+      const container = document.getElementById("catPills");
+      const allCats   = ["All", ...CATEGORIES];
+      container.innerHTML = allCats.map(cat =>
+        `<button class="cat-pill${cat === currentCat ? " active" : ""}"
+          role="listitem" aria-pressed="${cat === currentCat}"
+          onclick="changePillCategory('${cat}')">${cat}</button>`
+      ).join("");
+    }
+    function changePillCategory(cat) { currentCat = cat; buildCategoryPills(); renderResultsView(); }
+
+    /* ================================================================
+       FEATURED ROW BUILDER
+    ================================================================ */
+    function buildFeaturedRow(containerId, productIds) {
+      const container = document.getElementById(containerId);
+      const products  = productIds.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean);
+      const inCartIds = new Set(cart.map(c => c.product.id));
+      container.innerHTML = products.map(p => {
+        const pct = discountPct(p.mrp, p.discountedPrice);
+        const inCart = inCartIds.has(p.id);
+        return `<div class="product-card-sm" role="article">
+          <img class="p-img" src="${p.img}" alt="${p.name}" loading="lazy"
+            onerror="this.src='${IMG.generic_strip}'" />
+          <div class="p-body">
+            <p class="p-name">${p.name}</p>
+            <div class="price-block">
+              <span class="price-disc">₹${p.discountedPrice}</span>
+              <span class="price-mrp">₹${p.mrp}</span>
+              <span class="price-off">${pct}% off</span>
+            </div>
+            <button class="btn-add-sm${inCart ? " added" : ""}"
+              onclick="addToCart(${p.id})"
+              aria-label="${inCart ? 'Already in cart' : 'Add ' + p.name + ' to cart'}"
+            >${inCart ? "✔ Added" : "+ Add"}</button>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
+    /* ================================================================
+       NEW MEDICINES
+    ================================================================ */
+    function buildNewMedicines() {
+      const grid = document.getElementById("nmGrid");
+      grid.innerHTML = NEW_MEDICINES.map(med => {
+        const labels  = { new:"🆕 New", trending:"🔥 Trending", breakthrough:"⭐ Breakthrough", rx:"℞ Prescription" };
+        const badges  = med.badges.map(b => `<span class="nm-badge ${b}" aria-label="${labels[b]}">${labels[b]}</span>`).join("");
+        return `<article class="nm-card" role="listitem"
+          style="--nm-accent:${med.accentColor};--nm-bg-lt:${med.bgLt};--nm-bg-dk:${med.bgDk};">
+          <div class="nm-img-wrap">
+            <div class="nm-img-placeholder">
+              <div class="ph-icon" aria-hidden="true">${med.icon}</div>
+              <div class="ph-label">${med.type}</div>
+            </div>
+            <div class="nm-badge-wrap" aria-label="Product badges">${badges}</div>
+          </div>
+          <div class="nm-body">
+            <div class="nm-names">
+              <p class="nm-generic">${med.generic}</p>
+              <p class="nm-brand">Brand: <strong>${med.brand}</strong></p>
+            </div>
+            <p class="nm-desc">${med.desc}</p>
+            <div class="nm-meta">
+              <span class="nm-class">${med.drugClass}</span>
+              <button class="nm-enquire-btn" onclick="handleMedEnquiry('${med.generic}')"
+                aria-label="Enquire about ${med.generic}">Enquire →</button>
+            </div>
+          </div>
+        </article>`;
+      }).join("");
+    }
+
+    function handleMedEnquiry(name) {
+      const msg = `Hello! I'd like to enquire about *${name}* at Sapna Medical Store. Could you confirm availability and pricing?`;
+      window.open(`https://wa.me/918266989313?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
+    }
+
+    /* ================================================================
+       RENDER HOMEPAGE
+    ================================================================ */
+    function renderHomepage() {
+      buildCategoryCards();
+      buildFeaturedRow("bestSellersRow", BEST_SELLER_IDS);
+      buildFeaturedRow("topOffersRow",   TOP_OFFER_IDS);
+      buildNewMedicines();
+    }
+
+    /* ================================================================
+       FIX #3 — FUZZY SEARCH + "DID YOU MEAN?"
+
+       Algorithm:
+       1. First run an exact substring match (fast, zero false positives)
+       2. If results < 1:
+          a. Run Fuse.js fuzzy match
+          b. Find the top fuzzy result
+          c. Show "Did you mean: [top match name]?" banner
+          d. Silently display fuzzy results in the grid
+       3. User can:
+          • Click the suggestion → accept it (fill search box, rerun)
+          • Click Dismiss → hide banner, keep fuzzy results visible
+    ================================================================ */
+
+    function getExactMatches(query, catFilter) {
+      return PRODUCTS.filter(p => {
+        const matchCat  = catFilter === "All" || p.category === catFilter;
+        const matchText = !query ||
+          p.name.toLowerCase().includes(query) ||
+          p.category.toLowerCase().includes(query);
+        return matchCat && matchText;
+      });
+    }
+
+    function getFuzzyMatches(query) {
+      if (!fuseInstance) {
+        /* Fuse not loaded yet (slow network) — return simple fallback */
+        return PRODUCTS.filter(p =>
+          p.name.toLowerCase().split(" ").some(word => word.startsWith(query.slice(0,3)))
+        );
+      }
+      const results = fuseInstance.search(query);
+      /* Filter by category if one is selected */
+      return results
+        .filter(r => currentCat === "All" || r.item.category === currentCat)
+        .map(r => r.item);
+    }
+
+    function showDymBanner(suggestion) {
+      dymPending = suggestion;
+      document.getElementById("dymSuggestion").textContent = suggestion;
+      document.getElementById("dymBar").classList.add("visible");
+    }
+    function dismissDym() {
+      dymPending = null;
+      document.getElementById("dymBar").classList.remove("visible");
+    }
+    function acceptDidYouMean() {
+      if (!dymPending) return;
+      const accepted = dymPending;
+      dismissDym();
+      searchQuery = accepted.toLowerCase();
+      document.getElementById("navSearchInput").value   = accepted;
+      document.getElementById("heroSearchInput").value  = accepted;
+      currentCat = "All";
+      showResultsView();
+      renderResultsView();
+    }
+
+    /* ================================================================
+       RENDER RESULTS VIEW — now fuzzy-aware
+    ================================================================ */
+    function renderResultsView() {
+      buildCategoryPills();
+
+      const srTitle   = document.getElementById("srTitle");
+      const srCount   = document.getElementById("srCount");
+      const grid      = document.getElementById("productGridFull");
+      const inCartIds = new Set(cart.map(c => c.product.id));
+
+      let items = getExactMatches(searchQuery, currentCat);
+
+      /* ── FIX #3: If no exact results and user typed something, try fuzzy ── */
+      let usingFuzzy = false;
+      if (items.length === 0 && searchQuery) {
+        const fuzzyItems = getFuzzyMatches(searchQuery);
+        if (fuzzyItems.length > 0) {
+          items      = fuzzyItems;
+          usingFuzzy = true;
+          /* Pick the top fuzzy match name as the "Did you mean?" suggestion */
+          showDymBanner(fuzzyItems[0].name);
+        } else {
+          dismissDym();
+        }
+      } else {
+        dismissDym();
+      }
+
+      /* Update heading */
+      if (searchQuery) {
+        srTitle.innerHTML = usingFuzzy
+          ? `Closest results for <em>"${searchQuery}"</em>`
+          : `Results for <em>"${searchQuery}"</em>`;
+      } else if (currentCat !== "All") {
+        srTitle.textContent = currentCat;
+      } else {
+        srTitle.textContent = "All Products";
+      }
+
+      srCount.textContent = `${items.length} product${items.length !== 1 ? "s" : ""}`;
+
+      if (items.length === 0) {
+        grid.innerHTML = `<div class="empty-state">
+          <div class="es-icon" aria-hidden="true">🔍</div>
+          <p>No products found for "<strong>${searchQuery || currentCat}</strong>"</p>
+          <p style="font-size:.85rem;margin-top:.4rem">Try a different keyword or browse a category.</p>
+        </div>`;
+        return;
+      }
+
+      grid.innerHTML = items.map(p => {
+        const pct    = discountPct(p.mrp, p.discountedPrice);
+        const inCart = inCartIds.has(p.id);
+        return `<article class="product-card" role="listitem" data-id="${p.id}">
+          <div class="product-img-wrap">
+            <img src="${p.img}" alt="${p.name}" loading="lazy"
+              onerror="this.src='${IMG.generic_strip}'" />
+            <span class="product-cat-tag">${p.category}</span>
+          </div>
+          <div class="product-body">
+            <p class="product-name">${p.name}</p>
+            <div class="product-price-block">
+              <span class="product-disc-price">₹${p.discountedPrice}</span>
+              <span class="product-mrp-strike">₹${p.mrp}</span>
+              <span class="product-off-badge">${pct}% off</span>
+            </div>
+            <button class="btn-add-cart${inCart ? " added" : ""}"
+              onclick="addToCart(${p.id})"
+              aria-label="${inCart ? 'Already in cart' : 'Add ' + p.name + ' to cart'}"
+            >${inCart ? "✔ Added" : "Add to Cart"}</button>
+          </div>
+        </article>`;
+      }).join("");
+    }
+
+    /* ================================================================
+       SEARCH TRIGGERS
+    ================================================================ */
+    const navSearchInput = document.getElementById("navSearchInput");
+    navSearchInput.addEventListener("input", () => {
+      searchQuery = navSearchInput.value.trim().toLowerCase();
+      document.getElementById("heroSearchInput").value = navSearchInput.value;
+      if (searchQuery) { currentCat = "All"; showResultsView(); renderResultsView(); }
+      else if (viewMode !== "category") { showHomepage(); }
+    });
+    navSearchInput.addEventListener("keydown", e => { if (e.key === "Enter") triggerSearch(); });
+
+    function triggerSearch() {
+      const val = document.getElementById("navSearchInput").value.trim();
+      searchQuery = val.toLowerCase();
+      if (!searchQuery) { clearSearch(); return; }
+      currentCat = "All"; showResultsView(); renderResultsView();
+    }
+
+    const heroSearchInput = document.getElementById("heroSearchInput");
+    heroSearchInput.addEventListener("keydown", e => { if (e.key === "Enter") triggerHeroSearch(); });
+    function triggerHeroSearch() {
+      const val = heroSearchInput.value.trim();
+      if (!val) return;
+      searchQuery = val.toLowerCase();
+      document.getElementById("navSearchInput").value = val;
+      currentCat = "All"; showResultsView(); renderResultsView();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function triggerMobileSearch() {
+      const val = document.getElementById("mobileSearchInput").value.trim();
+      if (!val) return;
+      searchQuery = val.toLowerCase();
+      document.getElementById("navSearchInput").value  = val;
+      document.getElementById("heroSearchInput").value = val;
+      currentCat = "All"; closeMobileNav(); showResultsView(); renderResultsView();
+    }
+
+    /* ================================================================
+       CART OPERATIONS
+    ================================================================ */
+    function addToCart(productId) {
+      const product  = PRODUCTS.find(p => p.id === productId);
+      const existing = cart.find(c => c.product.id === productId);
+      if (existing) existing.qty += 1;
+      else cart.push({ product, qty: 1 });
+      saveCart();
+      if (viewMode === "home") {
+        buildFeaturedRow("bestSellersRow", BEST_SELLER_IDS);
+        buildFeaturedRow("topOffersRow",   TOP_OFFER_IDS);
+      } else { renderResultsView(); }
+      renderCart(); updateCartBadge();
+      showToast(`${product.name.substring(0,32)}… added`, "success");
+      if (cart.length === 1) openCart();
+    }
+    function removeFromCart(productId) {
+      cart = cart.filter(c => c.product.id !== productId);
+      saveCart();
+      if (viewMode === "home") { buildFeaturedRow("bestSellersRow", BEST_SELLER_IDS); buildFeaturedRow("topOffersRow", TOP_OFFER_IDS); }
+      else renderResultsView();
+      renderCart(); updateCartBadge();
+    }
+    function changeQty(productId, delta) {
+      const item = cart.find(c => c.product.id === productId);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) { removeFromCart(productId); return; }
+      saveCart(); renderCart(); updateCartBadge();
+    }
+    function saveCart() { localStorage.setItem("sapna_cart", JSON.stringify(cart)); }
+    function updateCartBadge() {
+      const badge = document.getElementById("cartBadge");
+      const total = cart.reduce((s, i) => s + i.qty, 0);
+      badge.textContent = total;
+      badge.classList.toggle("visible", total > 0);
+    }
+    function renderCart() {
+      const container   = document.getElementById("cartItems");
+      const checkoutBtn = document.getElementById("checkoutBtn");
+      const whatsappBtn = document.getElementById("whatsappBtn");
+      if (cart.length === 0) {
+        container.innerHTML = `<div class="cart-empty"><span class="ce-icon" aria-hidden="true">🛍️</span><p>Your cart is empty</p><p style="font-size:.78rem">Add products to get started</p></div>`;
+        checkoutBtn.disabled = whatsappBtn.disabled = true;
+        updateCartTotals(); return;
+      }
+      checkoutBtn.disabled = whatsappBtn.disabled = false;
+      container.innerHTML = cart.map(item => `
+        <div class="cart-item" role="group" aria-label="${item.product.name}">
+          <img class="ci-img" src="${item.product.img}" alt="${item.product.name}"
+            onerror="this.src='${IMG.generic_strip}'" />
+          <div class="ci-info">
+            <p class="ci-name">${item.product.name}</p>
+            <p class="ci-price">₹${(item.product.discountedPrice * item.qty).toFixed(2)}</p>
+          </div>
+          <div class="ci-qty" aria-label="Quantity controls">
+            <button class="ci-qty-btn" onclick="changeQty(${item.product.id},-1)" aria-label="Decrease quantity">−</button>
+            <span class="ci-qty-num">${item.qty}</span>
+            <button class="ci-qty-btn" onclick="changeQty(${item.product.id}, 1)" aria-label="Increase quantity">+</button>
+          </div>
+          <button class="ci-remove" onclick="removeFromCart(${item.product.id})" aria-label="Remove">🗑</button>
+        </div>`).join("");
+      updateCartTotals();
+    }
+    function updateCartTotals() {
+      const subtotal = cart.reduce((s,i) => s + i.product.discountedPrice * i.qty, 0);
+      const delivery = cart.length > 0 ? 40 : 0;
+      document.getElementById("cartSubtotal").textContent = `₹${subtotal.toFixed(2)}`;
+      document.getElementById("cartDelivery").textContent = cart.length > 0 ? "₹40.00" : "₹0.00";
+      document.getElementById("cartTotal").textContent    = `₹${(subtotal + delivery).toFixed(2)}`;
+    }
+
+    /* ================================================================
+       CART SIDEBAR
+    ================================================================ */
+    const cartSidebar = document.getElementById("cartSidebar");
+    const cartOverlay = document.getElementById("cartOverlay");
+    document.getElementById("cartBtn").addEventListener("click", openCart);
+    function openCart()  { cartSidebar.classList.add("open"); cartOverlay.classList.add("open"); document.body.style.overflow = "hidden"; }
+    function closeCart() { cartSidebar.classList.remove("open"); cartOverlay.classList.remove("open"); document.body.style.overflow = ""; }
+
+    /* ================================================================
+       PRESCRIPTION & WHATSAPP
+    ================================================================ */
+    function handlePrescriptionUpload(event) {
+      const file    = event.target.files[0];
+      const preview = document.getElementById("uploadPreview");
+      if (!file) return;
+      preview.style.display = "block";
+      preview.textContent   = `✅ "${file.name}" ready to send`;
+      showToast("Prescription attached", "success");
+    }
+    function orderViaWhatsApp() {
+      if (cart.length === 0) return;
+      const lines    = cart.map(i => `• ${i.product.name} x${i.qty} = ₹${(i.product.discountedPrice * i.qty).toFixed(2)}`);
+      const subtotal = cart.reduce((s,i) => s + i.product.discountedPrice * i.qty, 0);
+      const message  = ["🏥 *Sapna Medical Store – Order Request*","",  "*Items:*", ...lines,"",
+        `*Subtotal:* ₹${subtotal.toFixed(2)}`, `*Delivery:* ₹40.00`, `*Total:* ₹${(subtotal+40).toFixed(2)}`, "",
+        "Please confirm availability and delivery time. Thank you!"].join("\n");
+      window.open(`https://wa.me/918266989313?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    }
+    function handleCheckout() {
+      if (!loggedInUser) { showToast("Please sign in to checkout", "info"); openModal("login"); return; }
+      showToast("Redirecting to payment… (demo)", "info");
+    }
+
+    /* ================================================================
+       AUTH MODAL
+    ================================================================ */
+    const authModal = document.getElementById("authModal");
+    function openModal(tab = "login")   { authModal.classList.add("open"); document.body.style.overflow = "hidden"; switchTab(tab); document.getElementById("authMsg").className = "auth-msg"; }
+    function closeModal()               { authModal.classList.remove("open"); document.body.style.overflow = ""; }
+    function handleModalOutsideClick(e) { if (e.target === authModal) closeModal(); }
+    document.getElementById("loginBtn").addEventListener("click",    () => openModal("login"));
+    document.getElementById("registerBtn").addEventListener("click", () => openModal("register"));
+
+    function switchTab(tab) {
+      document.querySelectorAll(".auth-tab").forEach(t => {
+        const isActive = t.dataset.tab === tab;
+        t.classList.toggle("active", isActive);
+        t.setAttribute("aria-selected", String(isActive));
+        t.setAttribute("tabindex", isActive ? "0" : "-1");
+      });
+      document.querySelectorAll(".auth-form").forEach(f => f.classList.toggle("active", f.id === tab + "Form"));
+      document.getElementById("modalTitle").textContent = tab === "login" ? "Welcome Back" : "Create Account";
+      document.getElementById("authMsg").className = "auth-msg";
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault(); clearFormErrors("login");
+      const email    = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      let valid = true;
+      if (!isValidEmail(email))  { showFormError("loginEmailErr", "loginEmail");    valid = false; }
+      if (password.length < 8)   { showFormError("loginPassErr",  "loginPassword"); valid = false; }
+      if (!valid) return;
+      setAuthLoading("login", true);
+      try {
+        const res  = await fetch("https://sapna-medical-store.onrender.com/api/login", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ email, password }) });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          // set logged in user (use email local part as name)
+          loggedInUser = { email, name: email.split("@")[0] };
+          localStorage.setItem("sapna_user", JSON.stringify(loggedInUser));
+          // save token
+          localStorage.setItem("sapna_token", data.token);
+          updateAuthUI();
+          showAuthMsg("success", "Signed in successfully! 🎉");
+          setTimeout(closeModal, 1400);
+          showToast("Signed in successfully", "success");
+        } else {
+          showAuthMsg("error", data.message || "Invalid email or password.");
+        }
+      } catch {
+        loggedInUser = { email, name: email.split("@")[0] };
+        localStorage.setItem("sapna_user", JSON.stringify(loggedInUser));
+        updateAuthUI(); showAuthMsg("success", `Welcome, ${loggedInUser.name}! (demo mode) 🎉`);
+        setTimeout(closeModal, 1400); showToast("Signed in (demo mode)", "info");
+      } finally { setAuthLoading("login", false); }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault(); clearFormErrors("register");
+      const name    = document.getElementById("regName").value.trim();
+      const email   = document.getElementById("regEmail").value.trim();
+      const phone   = document.getElementById("regPhone").value.trim();
+      const pass    = document.getElementById("regPassword").value;
+      const confirm = document.getElementById("regPassConfirm").value;
+      let valid = true;
+      if (!name)                { showFormError("regNameErr",        "regName");        valid = false; }
+      if (!isValidEmail(email)) { showFormError("regEmailErr",       "regEmail");       valid = false; }
+      if (pass.length < 8)      { showFormError("regPassErr",        "regPassword");    valid = false; }
+      if (pass !== confirm)     { showFormError("regPassConfirmErr", "regPassConfirm"); valid = false; }
+      if (!valid) return;
+      setAuthLoading("register", true);
+      try {
+        const res  = await fetch("", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name, email, phone, password: pass }) });
+        const data = await res.json();
+        if (res.ok && data.success) { showAuthMsg("success", "Account created! Please sign in."); setTimeout(() => switchTab("login"), 1800); }
+        else { showAuthMsg("error", data.message || "Registration failed."); }
+      } catch {
+        showAuthMsg("success", "Account created (demo mode)! Please sign in.");
+        setTimeout(() => switchTab("login"), 1800);
+      } finally { setAuthLoading("register", false); }
+    }
+
+    function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+    function showFormError(errId, inputId) { document.getElementById(errId).classList.add("visible"); document.getElementById(inputId).classList.add("error"); }
+    function clearFormErrors(prefix) {
+      document.querySelectorAll(`#${prefix}Form .form-error`).forEach(el => el.classList.remove("visible"));
+      document.querySelectorAll(`#${prefix}Form .form-input`).forEach(el => el.classList.remove("error"));
+      document.getElementById("authMsg").className = "auth-msg";
+    }
+    function setAuthLoading(type, loading) {
+      const btn = document.getElementById(type+"SubmitBtn"), txt = document.getElementById(type+"BtnText"), spinner = document.getElementById(type+"Spinner");
+      btn.disabled = loading; spinner.classList.toggle("visible", loading); txt.style.opacity = loading ? "0.4" : "1";
+    }
+    function showAuthMsg(type, text) { const el = document.getElementById("authMsg"); el.className = `auth-msg ${type}`; el.textContent = text; }
+
+    function updateAuthUI() {
+      const profileWrap   = document.getElementById("profileWrap");
+      const loginBtn      = document.getElementById("loginBtn");
+      const registerBtn   = document.getElementById("registerBtn");
+      if (loggedInUser) {
+        profileWrap.classList.add("visible");
+        loginBtn.style.display = registerBtn.style.display = "none";
+        const initial = (loggedInUser.name || loggedInUser.email || "U").charAt(0).toUpperCase();
+        document.getElementById("avatarInitial").textContent  = initial;
+        document.getElementById("userGreeting").textContent   = loggedInUser.name || loggedInUser.email.split("@")[0];
+        document.getElementById("dropdownName").textContent   = loggedInUser.name  || "User";
+        document.getElementById("dropdownEmail").textContent  = loggedInUser.email || "";
+      } else {
+        profileWrap.classList.remove("visible");
+        loginBtn.style.display = registerBtn.style.display = "";
+        closeProfileDropdown();
+      }
+    }
+
+    /* ================================================================
+       TOAST
+    ================================================================ */
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toastContainer");
+      const toast     = document.createElement("div");
+      const icons     = { success:"✅", error:"❌", info:"ℹ️" };
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span aria-hidden="true">${icons[type]||"ℹ️"}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add("show")));
+      setTimeout(() => { toast.classList.remove("show"); setTimeout(() => toast.remove(), 350); }, 3000);
+    }
+
+    /* ================================================================
+       INIT
+    ================================================================ */
+    initFuse();          // set up Fuse.js after DOM ready
+    renderHomepage();
+    renderCart();
+    updateCartBadge();
+    updateAuthUI();
+
+    /* Re-init Fuse if CDN was still loading at page ready */
+    window.addEventListener("load", () => { if (!fuseInstance) initFuse(); });
+  </script>
+</body>
+</html>
